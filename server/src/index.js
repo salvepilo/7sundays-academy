@@ -44,30 +44,30 @@ app.use(
   })
 );
 
- //CORS middleware
- const allowedOrigins = [
-   'http://localhost:3000',
-   'http://127.0.0.1:3000'
- ];
- 
- app.use(cors({
-   origin: (origin, callback) => {
-     if (!origin) return callback(null, true);
-     if (allowedOrigins.includes(origin)) {
-       callback(null, true);
-     } else {
-       console.warn(`CORS blocked from origin: ${origin}`);
-       callback(null, true);
-     }
-   },
-   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-   allowedHeaders: ['Content-Type', 'Authorization'],
-   credentials: true,
-   maxAge: 86400
- }));
+//CORS middleware
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000'
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked from origin: ${origin}`);
+      callback(null, true);
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  maxAge: 86400
+}));
 
 // Middleware
-//app.use(express.json({ limit: '10mb' }));
+app.use(express.json({ limit: '10mb' }));
 
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -147,13 +147,13 @@ connectWithRetry();
 // =========================================================
 
 //app.use('/api/', apiLimiter);
-//app.use('/api/auth', authRoutes);
-//app.use('/api/users', userRoutes);
-//app.use('/api/courses', courseRoutes);
-//app.use('/api/lessons', lessonRoutes);
-//app.use('/api/tests', testRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/courses', courseRoutes);
+app.use('/api/lessons', lessonRoutes);
+app.use('/api/tests', testRoutes);
 //app.use('/api/networking', networkingRoutes);
-
+app.use('/api', emailConfigRoutes);
 // =========================================================
 // Public Routes
 // =========================================================
