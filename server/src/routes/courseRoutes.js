@@ -1,5 +1,6 @@
 const express = require("express");
-const courseController = require("../controllers/coursesController");
+const courseController = require("../controllers/courseController");
+const coursesController = require("../controllers/coursesController");
 const authController = require("../controllers/authController");
   
 const router = express.Router();
@@ -27,6 +28,6 @@ router.delete('/:courseId/lessons/:lessonId', courseController.removeLessonFromC
 
 router.delete('/:id', courseController.deleteCourse);
 router.patch('/:id/publish', courseController.publishCourse);
-router.get('/stats/dashboard', courseController.getCourseStats);
-router.get('/stats/dashboard', courseController.getDashboardStats);
+router.get('/stats/course', courseController.getCourseStats);
+router.get('/stats/dashboard', coursesController.getDashboardStats);
 module.exports = router;
