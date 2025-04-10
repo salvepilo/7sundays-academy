@@ -1,0 +1,31 @@
+{
+  "name": "7sundays-academy",
+  "version": "1.0.0",
+  "description": "Piattaforma di e-learning per la gestione di corsi video con funzionalità avanzate",
+  "main": "index.js",
+  "scripts": {
+    "client": "cd client && npm run dev",
+    "server": "cd server && cross-env PORT=5001 npm run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "install-all": "npm install && cd client && npm install && cd ../server && npm install",
+    "build": "cd client && npm run build"
+  },
+  "keywords": [
+    "e-learning",
+    "video-courses",
+    "education",
+    "academy"
+  ],
+  "author": "7Sundays",
+  "license": "ISC",
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^7.0.2",
+    "@mui/material": "^7.0.2",
+    "concurrently": "^8.2.0"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3"
+  }
+}
