@@ -33,33 +33,30 @@ exports.getCourse = async (req, res) => {
 exports.getDashboardStats = async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
-    const activeUsers = await User.countDocuments({ active: true }); 
     const totalCourses = await Course.countDocuments();
     const totalLessons = await Lesson.countDocuments();
     const totalTests = await Test.countDocuments();
     const totalEnrollments = await Enrollment.countDocuments();
 
-    // Calcolo del tasso di completamento (semplificato)
+    // Calcolo del tasso di completamento
     const completedEnrollments = await Enrollment.countDocuments({ completed: true });
     const completionRate = totalEnrollments > 0 ? (completedEnrollments / totalEnrollments) * 100 : 0;
+    const roundedCompletionRate = Math.round(completionRate);
 
-    // Calcolo del punteggio medio dei test (semplificato)
-    const testScores = await Test.aggregate([
-      {
-        $group: {
-          _id: null,
-          averageScore: { $avg: "$score" }
+    // Calcolo del punteggio medio dei test
+    const allTests = await Test.find();
+    let totalScore = 0;
+    for (const test of allTests) {
+        totalScore += test.score;
         }
-      }
-    ]);
-    const averageTestScore = testScores.length > 0 ? testScores[0].averageScore : 0;
-
+    const averageTestScore = allTests.length > 0 ? totalScore / allTests.length : 0;
+    const roundedAverageTestScore = Math.round(averageTestScore);
+        
     res.status(200).json({
       status: 'success',
       data: {
         stats: {
           totalUsers,
-          activeUsers,
           totalCourses,
           totalLessons,
           totalTests,
@@ -67,7 +64,7 @@ exports.getDashboardStats = async (req, res) => {
           completionRate: completionRate.toFixed(2),
           averageTestScore: averageTestScore.toFixed(2),
         },
-      },
+        },
     });
   } catch (err) {
     console.error('Errore nel recupero delle statistiche della dashboard:', err);
