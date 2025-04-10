@@ -13,25 +13,24 @@ import LessonTable from '@/components/admin/LessonTable';
 import CareerTable from '@/components/admin/CareerTable';
 import { useAuth } from '@/hooks/useAuth';
 
-
 const AdminDashboard: React.FC = () => {
   const router = useRouter();
-  const { user, isLoading: isLoadingAuth } = useAuth();
+  const { user, isLoading } = useAuth();
   const { users, isLoading: isLoadingUsers, error: errorUsers } = useUsers();
   const { courses, isLoading: isLoadingCourses, error: errorCourses } = useCourses();
   const { lessons, isLoading: isLoadingLessons, error: errorLessons } = useLessons();
   const { careers, isLoading: isLoadingCareers, error: errorCareers } = useCareers();
 
   useEffect(() => {
-    if (!isLoadingAuth && (!user || user.role !== 'admin')) {
+    if (!isLoading && (!user || user.role !== 'admin')) {
       router.push('/auth/login');
     }
-  }, [user, isLoadingAuth, router]);
+  }, [user, isLoading, router]);
 
-  if (isLoadingAuth || !user || user.role !== 'admin') {
+  if (isLoading || !user || user.role !== 'admin') {
     return null;
   }
-
+  
   return (
     <AdminLayout>
       <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
