@@ -1,7 +1,7 @@
-import * as Course from '../models/Course.js';
-import * as Lesson from '../models/Lesson.js';
-import * as User from '../models/User.js';
-
+import Course from '../models/Course.mjs';
+import Lesson from '../models/Lesson.mjs';
+import User from '../models/User.mjs';
+import mongoose from 'mongoose';
 
 // Ottieni tutti i corsi (con filtri opzionali)
 export const getAllCourses = async (req, res) => {
@@ -525,7 +525,7 @@ export const getEnrolledCourses = async (req, res) => {
 // Genera un certificato per un corso completato
 export const generateCertificate = async (req, res) => {
   try {
-    const courseId = req.params.id;
+    const courseId = new mongoose.Types.ObjectId(req.params.id);
     const userId = req.user.id;
     
     // Verifica se l'utente ha completato il corso

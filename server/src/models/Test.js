@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const testSchema = new mongoose.Schema(
   {
@@ -129,4 +129,4 @@ testSchema.methods.updateStats = async function(newScore, passed) {
 
 const Test = mongoose.model('Test', testSchema);
 
-module.exports = Test;
+export default Test;

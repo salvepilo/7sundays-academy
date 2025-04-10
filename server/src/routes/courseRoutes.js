@@ -1,5 +1,17 @@
 import express from "express";
-import { getAllCourses, getCourse, enrollInCourse, updateProgress, getEnrolledCourses, generateCertificate, createCourse, updateCourse, addLessonToCourse, removeLessonFromCourse, deleteCourse, publishCourse, getCourseStats } from '../controllers/courseController.js';
+import {
+  getAllCourses,
+  getCourse,
+  enrollInCourse,
+  updateProgress,
+  getEnrolledCourses,
+  generateCertificate,
+  createCourse,
+  updateCourse,
+  addLessonToCourse,
+  removeLessonFromCourse,
+  deleteCourse, publishCourse, getCourseStats
+} from '../controllers/courseController.js';
 import { protect, restrictTo } from '../controllers/authController.js';
 
   

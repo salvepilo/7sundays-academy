@@ -55,7 +55,7 @@ const CareerForm: React.FC<CareerFormProps> = ({ career, onClose }) => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (career) {
-      await updateCareer({ ...formData, id: career.id });
+      await updateCareer(career.id ?? '', formData);
     } else {
       await createCareer(formData);
     }

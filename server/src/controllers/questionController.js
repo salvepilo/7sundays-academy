@@ -1,5 +1,5 @@
-import * as Question from '../models/Question.js';
-import * as Answer from '../models/Answer.js';
+import Question from '../models/Question.mjs';
+import Answer from '../models/Answer.mjs';
 
 /**
  * Creates a new question for a lesson.

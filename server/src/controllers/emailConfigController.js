@@ -1,7 +1,7 @@
 /**
  * Controller per la gestione delle configurazioni email SMTP
  * Gestisce le operazioni CRUD sulle configurazioni email e il test della connessione
-*/
+ */
 import * as EmailConfig from '../models/EmailConfig.js';
 import nodemailer from 'nodemailer';
 
@@ -17,7 +17,7 @@ export const getAllEmailConfigs = async (req, res) => {
     res.status(200).json({
       status: 'success',
       results: configs.length,
-      data: {
+      data: { 
         configs,
       },
     });
@@ -48,7 +48,7 @@ export const getActiveEmailConfig = async (req, res) => {
 
     res.status(200).json({
       status: 'success',
-      data: {
+      data: { 
         config,
       },
     });
@@ -79,7 +79,7 @@ export const getEmailConfig = async (req, res) => {
 
     res.status(200).json({
       status: 'success',
-      data: {
+      data: { 
         config,
       },
     });
@@ -110,7 +110,7 @@ export const createEmailConfig = async (req, res) => {
 
     res.status(201).json({
       status: 'success',
-      data: {
+      data: { 
         config: configResponse,
       },
     });
@@ -151,7 +151,7 @@ export const updateEmailConfig = async (req, res) => {
 
     res.status(200).json({
       status: 'success',
-      data: {
+      data: { 
         config,
       },
     });
@@ -221,7 +221,7 @@ export const activateEmailConfig = async (req, res) => {
         updatedBy: req.user.id 
       },
       {
-        new: true,
+        new: true, 
         runValidators: true,
       }
     ).select('-auth.pass');
@@ -235,7 +235,7 @@ export const activateEmailConfig = async (req, res) => {
 
     res.status(200).json({
       status: 'success',
-      data: {
+      data: { 
         config,
       },
     });
@@ -267,7 +267,7 @@ export const testEmailConfig = async (req, res) => {
     // Crea un transporter temporaneo per il test
     const transporter = nodemailer.createTransport({
       host,
-      port,
+      port, 
       secure: secure || false,
       auth: {
         user: auth.user,
@@ -309,7 +309,7 @@ export const testEmailConfig = async (req, res) => {
     res.status(200).json({
       status: 'success',
       message: 'Test email inviata con successo',
-      data: {
+      data: { 
         messageId: result.messageId,
       },
     });

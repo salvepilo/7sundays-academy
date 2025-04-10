@@ -112,6 +112,6 @@ courseSchema.statics.calculateStats = async function(courseId) {
   });
 };
 
-export const Course = mongoose.model('Course', courseSchema);
+const Course = mongoose.model('Course', courseSchema);
 
 export default Course;

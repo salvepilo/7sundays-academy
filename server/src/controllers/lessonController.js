@@ -1,7 +1,6 @@
-import * as Lesson from '../models/Lesson.js';
-import * as Course from '../models/Course.js';
-import * as User from '../models/User.js';
-import jwt from 'jsonwebtoken';
+import Lesson from '../models/Lesson.mjs';
+import Course from '../models/Course.mjs';
+import User from '../models/User.mjs';
 
 export const getAllLessons = async (req, res) => {
   try {
@@ -21,7 +20,7 @@ export const getAllLessons = async (req, res) => {
 export const getLessonById = async (req, res) => {
   try {
     const lesson = await Lesson.findById(req.params.id);
-
+    
     if (!lesson) {
       return res.status(404).json({
         status: 'fail',
@@ -66,7 +65,7 @@ export const getLessons = async (req, res) => {
       const user = await User.findById(req.user.id);
       const enrollment = user.enrolledCourses.find(
         (e) => e.courseId.toString() === courseId
-      );
+        );
 
       if (enrollment && enrollment.lastWatched) {
         lessonsWithProgress = lessons.map((lesson) => {
@@ -106,7 +105,7 @@ export const getLesson = async (req, res) => {
     const lesson = await Lesson.findById(id).populate(
       'course',
       'title isPublished'
-    );
+      );
 
     if (!lesson) {
       return res.status(404).json({
@@ -117,7 +116,7 @@ export const getLesson = async (req, res) => {
 
     if (
       (!lesson.isPublished || !lesson.course.isPublished) &&
-      (!req.user || req.user.role !== 'admin')
+      (!req.user || req.user.role !== 'admin') 
     ) {
       return res.status(403).json({
         status: 'fail',
@@ -129,7 +128,7 @@ export const getLesson = async (req, res) => {
       const user = await User.findById(req.user.id);
       const isEnrolled = user.enrolledCourses.some(
         (enrollment) =>
-          enrollment.courseId.toString() === lesson.course._id.toString()
+        enrollment.courseId.toString() === lesson.course._id.toString()
       );
 
       if (!isEnrolled) {
@@ -193,7 +192,7 @@ export const updateLesson = async (req, res) => {
   try {
     const lesson = await Lesson.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
-      runValidators: true,
+      runValidators: true, 
     });
 
     if (!lesson) {
@@ -283,7 +282,7 @@ export const updateWatchProgress = async (req, res) => {
     user.enrolledCourses[enrollmentIndex].lastWatched = {
       lessonId: id,
       timestamp: timestamp || 0,
-    };
+    }; 
 
     if (completed) {
       const lessons = await Lesson.find({ course: courseId });
@@ -325,7 +324,7 @@ export const getLessonResources = async (req, res) => {
     const lesson = await Lesson.findById(id).populate(
       'course',
       'title isPublished'
-    );
+    ); 
 
     if (!lesson) {
       return res.status(404).json({
@@ -336,7 +335,7 @@ export const getLessonResources = async (req, res) => {
 
     if (
       (!lesson.isPublished || !lesson.course.isPublished) &&
-      (!req.user || req.user.role !== 'admin')
+      (!req.user || req.user.role !== 'admin') 
     ) {
       return res.status(403).json({
         status: 'fail',
@@ -348,7 +347,7 @@ export const getLessonResources = async (req, res) => {
       const user = await User.findById(req.user.id);
       const isEnrolled = user.enrolledCourses.some(
         (enrollment) =>
-          enrollment.courseId.toString() === lesson.course._id.toString()
+        enrollment.courseId.toString() === lesson.course._id.toString()
       );
 
       if (!isEnrolled) {
@@ -383,7 +382,7 @@ export const getVideoToken = async (req, res) => {
     const lesson = await Lesson.findById(id).populate(
       'course',
       'title isPublished'
-    );
+    ); 
 
     if (!lesson) {
       return res.status(404).json({
@@ -394,7 +393,7 @@ export const getVideoToken = async (req, res) => {
 
     if (
       (!lesson.isPublished || !lesson.course.isPublished) &&
-      (!req.user || req.user.role !== 'admin')
+      (!req.user || req.user.role !== 'admin') 
     ) {
       return res.status(403).json({
         status: 'fail',
@@ -406,7 +405,7 @@ export const getVideoToken = async (req, res) => {
       const user = await User.findById(req.user.id);
       const isEnrolled = user.enrolledCourses.some(
         (enrollment) =>
-          enrollment.courseId.toString() === lesson.course._id.toString()
+        enrollment.courseId.toString() === lesson.course._id.toString()
       );
 
       if (!isEnrolled) {
@@ -418,7 +417,7 @@ export const getVideoToken = async (req, res) => {
     }
 
     const token = generateSecureToken(req.user.id, lesson._id);
-
+    
     res.status(200).json({
       status: 'success',
       data: {
@@ -454,7 +453,7 @@ export const publishLesson = async (req, res) => {
         isPublished,
         publishedAt:
           isPublished && !lesson?.publishedAt ? Date.now() : lesson?.publishedAt,
-      },
+      }, 
       { new: true, runValidators: true }
     );
 
@@ -550,7 +549,7 @@ const getCompletedLessonsCount = async (user, lessons) => {
 
   const enrollment = user.enrolledCourses.find(
     (e) => e.courseId.toString() === lessons[0].course.toString()
-  );
+    );
 
   if (!enrollment || !enrollment.lastWatched) {
     return completedCount;
@@ -564,10 +563,10 @@ const getCompletedLessonsCount = async (user, lessons) => {
         enrollment.lastWatched.timestamp >= lesson.duration * 0.9) ||
       (lesson.order <
         lessons.find(
-          (l) =>
-            l._id.toString() === enrollment.lastWatched.lessonId?.toString()
-        )?.order)
-    ) {
+          (l) => 
+          l._id.toString() === enrollment.lastWatched.lessonId?.toString() 
+        )?.order) 
+    ){
       completedCount++;
     }
   }
@@ -576,9 +575,10 @@ const getCompletedLessonsCount = async (user, lessons) => {
 };
 
 const generateSecureToken = (userId, lessonId) => {
-  return jwt.sign(
+  const jwt = require('jsonwebtoken');
+    return jwt.sign(
     { userId, lessonId, timestamp: Date.now() },
     process.env.JWT_SECRET,
-    { expiresIn: '1h' }
+    { expiresIn: '1h' } 
   );
 };

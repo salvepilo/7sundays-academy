@@ -1,5 +1,5 @@
-import express from 'express';
-import { testEmailConfig, getActiveEmailConfig, activateEmailConfig, getAllEmailConfigs, createEmailConfig, getEmailConfig, updateEmailConfig, deleteEmailConfig } from '../controllers/emailConfigController.js';
+import express from 'express'; 
+import { testEmailConfig, getActiveEmailConfig, activateEmailConfig, getAllEmailConfigs, createEmailConfig, getEmailConfig, updateEmailConfig, deleteEmailConfig } from '../controllers/emailConfigController.mjs';
 import { protect, restrictTo } from '../controllers/authController.js';
 
 const router = express.Router();

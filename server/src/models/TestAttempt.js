@@ -72,7 +72,7 @@ testAttemptSchema.index({ user: 1, test: 1 });
 // Metodo per verificare se l'utente ha superato il test
 testAttemptSchema.statics.hasUserPassedTest = async function(userId, testId) {
   const attempt = await this.findOne(
-    { user: userId, test: testId, passed: true },
+    { user: userId, test: testId, passed: true }, 
     { passed: 1 }
   ).sort({ completedAt: -1 });
   
@@ -83,7 +83,7 @@ testAttemptSchema.statics.hasUserPassedTest = async function(userId, testId) {
 testAttemptSchema.statics.getBestScore = async function(userId, testId) {
   const bestAttempt = await this.findOne(
     { user: userId, test: testId },
-    { percentageScore: 1 }
+    { percentageScore: 1, _id: 0 } 
   ).sort({ percentageScore: -1 });
   
   return bestAttempt ? bestAttempt.percentageScore : 0;

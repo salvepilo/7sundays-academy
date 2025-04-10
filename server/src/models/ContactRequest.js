@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const contactRequestSchema = new mongoose.Schema(
   {
@@ -68,4 +68,4 @@ contactRequestSchema.statics.existsPendingRequest = async function(senderId, rec
 
 const ContactRequest = mongoose.model('ContactRequest', contactRequestSchema);
 
-module.exports = ContactRequest;
+export default ContactRequest;

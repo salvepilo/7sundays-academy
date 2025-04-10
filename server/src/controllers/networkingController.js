@@ -2,7 +2,6 @@ import * as NetworkingContact from '../models/NetworkingContact.js';
 import * as User from '../models/User.js';
 import * as TestAttempt from '../models/TestAttempt.js';
 
-// FUNZIONI MANCANTI AGGIUNTE QUI
 // Crea un nuovo contatto di networking (solo per admin)
 export const createContact = async (req, res) => {
   try {
@@ -81,7 +80,7 @@ export const deleteContact = async (req, res) => {
     });
   }
 };
-// FINE DELLE FUNZIONI AGGIUNTE
+
 
 // Ottieni tutti i contatti di networking disponibili per l'utente
 export const getContacts = async (req, res) => {

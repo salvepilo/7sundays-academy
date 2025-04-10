@@ -44,7 +44,8 @@ answerSchema.pre('save', async function(next) {
   try {
     if (this.isNew || this.isModified('selectedOptions') || this.isModified('textAnswer')) {
       // Recupera la domanda per verificare la risposta
-      const Question = mongoose.model('Question');
+      //const Question = mongoose.model('Question');
+      const Question = mongoose.models.Question || mongoose.model('Question', (await import('./Question.js')).default.schema);
       const question = await Question.findById(this.question);
       
       if (!question) {

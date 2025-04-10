@@ -58,7 +58,7 @@ const questionSchema = new mongoose.Schema(
 questionSchema.index({ lesson: 1 });
 
 // Virtual per le risposte degli studenti
-questionSchema.virtual('answers', {
+questionSchema.virtual('answers',  {
   ref: 'Answer',
   foreignField: 'question',
   localField: '_id'

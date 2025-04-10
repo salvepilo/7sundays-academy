@@ -26,7 +26,7 @@ const CourseForm: React.FC<CourseFormProps> = ({ course, onClose }) => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     if (course) {
-      await updateCourse({ _id: course._id, title, description });
+      await updateCourse(course._id, { title, description });
     } else {
       await createCourse({ title, description });
     }

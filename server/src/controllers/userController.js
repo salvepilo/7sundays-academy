@@ -1,6 +1,6 @@
-import * as User from '../models/User.js';
-import * as Course from '../models/Course.js';
-import * as TestAttempt from '../models/TestAttempt.js';
+import User from '../models/User.mjs';
+import Course from '../models/Course.mjs';
+import TestAttempt from '../models/TestAttempt.mjs';
 
 // Funzione di supporto per filtrare gli oggetti
 const filterObj = (obj, ...allowedFields) => {

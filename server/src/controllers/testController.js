@@ -1,8 +1,9 @@
-import * as Test from '../models/Test.js';
-import * as TestAttempt from '../models/TestAttempt.js';
-import * as User from '../models/User.js';
-import * as Course from '../models/Course.js';
+import * as Test from '../models/Test.mjs';
+import * as TestAttempt from '../models/TestAttempt.mjs';
+import * as User from '../models/User.mjs';
+import * as Course from '../models/Course.mjs';
 import { OpenAI } from 'openai';
+import dotenv from 'dotenv';
 
 // Inizializza il client OpenAI
 const openai = new OpenAI({
@@ -15,7 +16,7 @@ export const getAllTests = async (req, res) => {
     // Costruisci la query di filtro
     const queryObj = { ...req.query };
     const excludedFields = ['page', 'sort', 'limit', 'fields'];
-    excludedFields.forEach(el => delete queryObj[el]);
+    excludedFields.forEach((el) => delete queryObj[el]);
 
     // Se l'utente non è admin, mostra solo i test pubblicati
     let query = Test.find(queryObj);
@@ -45,19 +46,27 @@ export const getAllTests = async (req, res) => {
     if (req.user) {
       testsWithAttempts = await Promise.all(
         tests.map(async (test) => {
-          const testObj = test.toObject();
+          const testObj = test.toObject(); // Converti il documento Mongoose in un oggetto JavaScript normale
 
           // Ottieni il miglior punteggio dell'utente
-          const bestScore = await TestAttempt.getBestScore(req.user.id, test._id);
+          const bestScore = await TestAttempt.getBestScore(
+            req.user.id,
+            test._id
+          );
 
           // Ottieni il numero di tentativi
-          const attemptsCount = await TestAttempt.countUserAttempts(req.user.id, test._id);
+          const attemptsCount = await TestAttempt.countUserAttempts(
+            req.user.id,
+            test._id
+          );
 
           // Verifica se l'utente ha superato il test
-          const hasPassed = await TestAttempt.hasUserPassedTest(req.user.id, test._id);
+          const hasPassed = await TestAttempt.hasUserPassedTest(
+            req.user.id,
+            test._id
+          );
 
           return {
-            ...testObj,
             userBestScore: bestScore,
             userAttemptsCount: attemptsCount,
             userHasPassed: hasPassed,
@@ -107,13 +116,22 @@ export const getTest = async (req, res) => {
     let testWithAttempts = test.toObject();
     if (req.user) {
       // Ottieni il miglior punteggio dell'utente
-      const bestScore = await TestAttempt.getBestScore(req.user.id, test._id);
+      const bestScore = await TestAttempt.getBestScore(
+        req.user.id,
+        test._id
+      );
 
       // Ottieni il numero di tentativi
-      const attemptsCount = await TestAttempt.countUserAttempts(req.user.id, test._id);
+      const attemptsCount = await TestAttempt.countUserAttempts(
+        req.user.id,
+        test._id
+      );
 
       // Verifica se l'utente ha superato il test
-      const hasPassed = await TestAttempt.hasUserPassedTest(req.user.id, test._id);
+      const hasPassed = await TestAttempt.hasUserPassedTest(
+        req.user.id,
+        test._id
+      );
 
       testWithAttempts.userBestScore = bestScore;
       testWithAttempts.userAttemptsCount = attemptsCount;
@@ -122,8 +140,12 @@ export const getTest = async (req, res) => {
 
       // Se l'utente non è admin, rimuovi le risposte corrette
       if (req.user.role !== 'admin' && !test.showCorrectAnswers) {
-        testWithAttempts.questions = testWithAttempts.questions.map(q => {
-          const { correctAnswer, aiEvaluationCriteria, ...questionWithoutAnswer } = q;
+        testWithAttempts.questions = testWithAttempts.questions.map((q) => {
+          const {
+            correctAnswer,
+            aiEvaluationCriteria,
+            ...questionWithoutAnswer
+          } = q;
           return questionWithoutAnswer;
         });
       }
@@ -272,7 +294,10 @@ export const startTestAttempt = async (req, res) => {
     const questionsWithoutAnswers = questions.map((q) => {
       const { correctAnswer, aiEvaluationCriteria, ...questionWithoutAnswer } = q;
       return questionWithoutAnswer;
-    });
+    })
+    
+
+    
 
     res.status(200).json({
       status: 'success',
@@ -360,7 +385,8 @@ export const submitTestAttempt = async (req, res) => {
           isCorrect = aiScore >= 0.7; // Considera corretta se il punteggio è almeno 0.7
 
           aiEvaluation = {
-           score: aiScore,
+            score: aiScore,
+
             feedback: await generateFeedback(question.question, answer.answer, aiScore),
           };
         } catch (error) {
@@ -383,7 +409,10 @@ export const submitTestAttempt = async (req, res) => {
       evaluatedAnswers.push({
         questionIndex: answer.questionIndex,
         answer: answer.answer,
+
         isCorrect,
+
+
         aiEvaluation,
         points,
       });
@@ -534,7 +563,7 @@ export const publishTest = async (req, res) => {
         isPublished,
         publishedAt: isPublished && !test?.publishedAt ? Date.now() : test?.publishedAt
       },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true, }
     );
     
     if (!test) {
@@ -575,7 +604,7 @@ export const getTestStats = async (req, res) => {
     const hardestTests = await Test.aggregate([
       {
         $match: {
-          isPublished: true,
+          isPublished: true, 
           attemptCount: { $gt: 5 } // Solo test con almeno 5 tentativi
         }
       },
@@ -602,7 +631,7 @@ export const getTestStats = async (req, res) => {
           title: 1,
           attemptCount: 1,
           averageScore: 1,
-          passRate: { $divide: [{ $multiply: ['$passCount', 100] }, { $max: ['$attemptCount', 1] }] }
+          passRate: { $divide: [{ $multiply: ['$passCount', 100] }, { $max: ['$attemptCount', 1] }] },
         }
       }
     ]);  

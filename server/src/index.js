@@ -16,9 +16,14 @@ import * as coursesController from './controllers/coursesController.js';
 import * as testController from './controllers/testController.js';
 
 // Import routes
-import authRoutes from "./routes/authRoutes.js";
-import userRoutes from "./routes/userRoutes.js";
-import courseRoutes from "./routes/courseRoutes.js";
+import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import courseRoutes from './routes/courseRoutes.js';
+import emailConfigRoutes from './routes/emailConfigRoutes.js';
+import lessonRoutes from './routes/lessonRoutes.js';
+import networkingRoutes from './routes/networkingRoutes.js';
+
+
 import testRoutes from "./routes/testRoutes.js";
 import lessonRoutes from './routes/lessonRoutes.js';
 import networkingRoutes from './routes/networkingRoutes.js';

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * Schema per la configurazione delle email SMTP
@@ -73,6 +73,6 @@ emailConfigSchema.pre('save', async function (next) {
   next();
 });
 
-const EmailConfig = mongoose.model('EmailConfig', emailConfigSchema);
+const EmailConfig = mongoose.model('EmailConfig', emailConfigSchema); 
 
-module.exports = EmailConfig;
+export default EmailConfig;

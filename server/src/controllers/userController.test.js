@@ -1,4 +1,4 @@
-const userController = require('./userController');
+import * as userController from './userController.mjs';
 
 describe('userController', () => {
   describe('getAllUsers', () => {

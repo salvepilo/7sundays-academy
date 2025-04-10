@@ -3,6 +3,10 @@ import { signup, login, updatePassword, forgotPassword, resetPassword, protect, 
 
 const router = express.Router();
 
+// Route protetta per aggiornare la password (richiede autenticazione)
+router.patch('/updatePassword', protect, updatePassword);
+
+
 // Route per la registrazione e il login
 router.post('/signup', signup);
 router.post('/login', login);

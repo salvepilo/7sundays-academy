@@ -1,7 +1,8 @@
 import express from 'express';
-import { getContacts, createContact, updateContact, deleteContact, getContactDetails, searchContacts, sendContactRequest, acceptContactRequest, rejectContactRequest, getPendingRequests, getMessages, sendMessage, markMessageAsRead, deleteMessage, getNetworkingStats } from '../controllers/networkingController.js';
-import { protect, restrictTo } from '../controllers/authController.js';
-
+import * as networkingController from '../controllers/networkingController.js';
+import * as authController from '../controllers/authController.js';
+const { getContacts, createContact, updateContact, deleteContact, getContactDetails, searchContacts, sendContactRequest, acceptContactRequest, rejectContactRequest, getPendingRequests, getMessages, sendMessage, markMessageAsRead, deleteMessage, getNetworkingStats } = networkingController;
+const { protect, restrictTo } = authController
 
 const router = express.Router();
 
