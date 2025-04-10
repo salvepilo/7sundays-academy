@@ -704,17 +704,16 @@ const generateFeedback = async (question, answer, score) => {
   }
 };
 
-export default {
-  getAllTests,
-  getTest,
-  createTest,
-  updateTest,
-  deleteTest,
-  startTestAttempt,
-  submitTestAttempt,
-  getUserTestAttempts,
-  getTestAttemptDetails,
-  publishTest,
-  getTestStats
-};
+
+export { getAllTests };
+export { getTest };
+export { createTest };
+export { updateTest };
+export { deleteTest };
+export { startTestAttempt };
+export { submitTestAttempt };
+export { getUserTestAttempts };
+export { getTestAttemptDetails };
+export { publishTest };
+export { getTestStats };
 

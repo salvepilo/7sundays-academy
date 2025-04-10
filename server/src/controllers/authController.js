@@ -311,14 +311,3 @@ export const getMe = async (req, res, next) => {
     });
   }
 };
-
-export default {
-  signup,
-  login,
-  updatePassword,
-  forgotPassword,
-  resetPassword,
-  protect,
-  restrictTo,
-  getMe,
-};

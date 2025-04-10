@@ -266,12 +266,4 @@ export const getMyProfile = async (req, res) => {
   }
 };
 
-const userController = {
-  getAllUsers,
-  createUser,
-  getUser,
-  updateUser,
-  updateMe,
-  deleteMe,
-  getMyProfile,
-};export default userController;
+

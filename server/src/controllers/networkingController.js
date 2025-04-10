@@ -497,22 +497,3 @@ export const getNetworkingRequirements = async (req, res) => {
     });
   }
 };
-
-export default {
-  createContact,
-  updateContact,
-  deleteContact,
-  getContacts,
-  getContactDetails,
-  searchContacts,
-  sendContactRequest,
-  acceptContactRequest,
-  rejectContactRequest,
-  getPendingRequests,
-  getMessages,
-  sendMessage,
-  markMessageAsRead,
-  deleteMessage,
-  getNetworkingStats,
-  getNetworkingRequirements,
-};

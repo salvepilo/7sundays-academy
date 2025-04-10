@@ -131,11 +131,3 @@ export const deleteAnswer = async (req, res) => {
         });
         }
 };
-
-export default {
-    createQuestion,
-    getQuestions,
-    createAnswer,
-    deleteQuestion,
-    deleteAnswer,
-};

@@ -321,14 +321,3 @@ export const testEmailConfig = async (req, res) => {
     });
   }
 };
-
-export default {
-  getAllEmailConfigs,
-  getActiveEmailConfig,
-  getEmailConfig,
-  createEmailConfig,
-  updateEmailConfig,
-  deleteEmailConfig,
-  activateEmailConfig,
-  testEmailConfig
-}

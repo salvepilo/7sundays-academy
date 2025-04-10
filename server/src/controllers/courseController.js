@@ -625,21 +625,3 @@ export const publishCourse = async (req, res) => {
     });
   }
 };
-
-export default {
-  getAllCourses,
-  getCourse,
-  createCourse,
-  updateCourse,
-  deleteCourse,
-  addLessonToCourse,
-  removeLessonFromCourse,
-  enrollInCourse,
-  updateProgress,
-  getCourseStats,
-  getEnrolledCourses,
-  generateCertificate,
-  publishCourse
-
-
-}

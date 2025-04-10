@@ -90,9 +90,3 @@ export const deleteNote = async (req, res) => {
     });
   }
 };
-
-export default {
-  createNote,
-  getNotes,
-  deleteNote
-};

@@ -103,9 +103,3 @@ export const updateCourse = async (req, res) => {
     });
   }
 };
-
-export default {
-  getCourse,
-  getDashboardStats,
-  updateCourse,
-};
