@@ -23,7 +23,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
         <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
           {course.thumbnail ? (
             <img 
-              src={course.thumbnail} 
+              src={`/images/courses/${course.thumbnail}`} 
               alt={course.title} 
               className="w-full h-full object-cover"
             />

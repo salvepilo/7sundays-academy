@@ -143,6 +143,8 @@ connectWithRetry();
 // Importa i controller direttamente per garantire che le route funzionino
 const authController = require('./controllers/authController');
 
+let coursesRoutes, usersRoutes;
+
 let userController, courseController, lessonController, testController, networkingController, emailConfigController;
 let authRoutes, userRoutes, courseRoutes, lessonRoutes, testRoutes, networkingRoutes, emailConfigRoutes;
 
@@ -183,6 +185,16 @@ try {
 }
 
 try {
+    coursesRoutes = require('./routes/courses');
+  } catch (error) {
+    console.warn('⚠️ coursesRoutes non disponibile');
+  }
+  
+try {
+    usersRoutes = require('./routes/users');
+  } catch (error) {
+    console.warn('⚠️ usersRoutes non disponibile');
+}
     emailConfigRoutes = require('./routes/emailConfigRoutes');
   } catch (error) {
     console.warn('⚠️ emailConfigRoutes non disponibile:', error.message);
@@ -248,6 +260,8 @@ if (userController) {
 // Applica rate limiter alle route API
 app.use('/api/', apiLimiter);
 
+app.use('/api/courses', coursesRoutes);
+app.use('/api/users', usersRoutes);
 // Mount delle route con prefisso /api
 if (authRoutes) app.use('/api/auth', authRoutes);
 if (courseRoutes) app.use('/api/courses', courseRoutes);

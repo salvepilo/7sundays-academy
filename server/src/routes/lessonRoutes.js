@@ -1,9 +1,13 @@
 const express = require('express');
 const lessonController = require('../controllers/lessonController');
 const noteController = require('../controllers/noteController');
+const authController = require('../controllers/authController');
 const questionController = require('../controllers/questionController');
 
 const router = express.Router();
+
+// Protezione di tutte le routes successive
+router.use(authController.protect);
 
 // GET all lessons
 router.get('/', lessonController.getAllLessons);

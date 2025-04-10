@@ -606,7 +606,7 @@ exports.getTestStats = async (req, res) => {
         }
       }
     ]);  
-    res.status(200).json(
+    res.status(200).json({
       status: 'success',
       data: {
         totalTests,
@@ -617,7 +617,7 @@ exports.getTestStats = async (req, res) => {
         hardestTests,
         popularTests,
       },
-    );
+    });
   } catch (err) {
     console.error('Errore nel recupero delle statistiche dei test:', err);
     res.status(500).json({

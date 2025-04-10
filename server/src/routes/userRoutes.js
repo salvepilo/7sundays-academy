@@ -7,22 +7,19 @@ const router = express.Router();
 // Route pubbliche per l'autenticazione
 router.post('/signup', authController.signup);
 router.post('/login', authController.login);
-router.post('/forgotPassword', userController.forgotPassword);
-router.patch('/resetPassword/:token', userController.resetPassword);
+router.post('/forgotPassword', authController.forgotPassword);
+router.patch('/resetPassword/:token', authController.resetPassword);
 
 // Protezione di tutte le routes successive
 router.use(authController.protect);
  
 // Routes per l'utente corrente
 router.get('/me', userController.getMyProfile);
-router.patch('/updateMe', 
-userController.uploadUserPhoto, 
-userController.resizeUserPhoto,
-userController.updateMe
-); 
-router.patch('/updateMyPassword',userController.updatePassword);
-router.patch('/updatePreferences',userController.updatePreferences);
+router.patch('/updateMe', userController.updateMe);
+router.patch('/updateMyPassword',authController.updatePassword);
 router.delete('/deleteMe', userController.deleteMe);
+
+
 
 // Routes solo per admin
 router.use(authController.restrictTo('admin'));
