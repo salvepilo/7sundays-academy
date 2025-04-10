@@ -1,6 +1,6 @@
-const NetworkingContact = require('../models/NetworkingContact');
-const User = require('../models/User');
-const TestAttempt = require('../models/TestAttempt');
+import NetworkingContact from '../models/NetworkingContact.js';
+import User from '../models/User.js';
+import TestAttempt from '../models/TestAttempt.js';
 
 // FUNZIONI MANCANTI AGGIUNTE QUI
 // Crea un nuovo contatto di networking (solo per admin)

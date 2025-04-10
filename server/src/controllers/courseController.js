@@ -1,6 +1,7 @@
-const Course = require('../models/Course');
-const Lesson = require('../models/Lesson');
-const User = require('../models/User');
+import Course from '../models/Course.js';
+import Lesson from '../models/Lesson.js';
+import User from '../models/User.js';
+
 
 // Ottieni tutti i corsi (con filtri opzionali)
 exports.getAllCourses = async (req, res) => {
@@ -55,11 +56,11 @@ exports.getAllCourses = async (req, res) => {
           e => e.courseId.toString() === course._id.toString()
         );
         
-        return {
-          ...courseObj,
-          progress: enrollment ? enrollment.progress : 0,
-          isEnrolled: !!enrollment,
-          completed: user.completedCourses.includes(course._id),
+        return { ...courseObj,
+            progress: enrollment ? enrollment.progress : 0,
+            isEnrolled: !!enrollment,
+            completed: user.completedCourses.includes(course._id),
+        
         };
       });
     }
@@ -79,8 +80,6 @@ exports.getAllCourses = async (req, res) => {
     });
   }
 };
-
-module.exports = exports;
 
 // Ottieni un singolo corso per ID
 exports.getCourse = async (req, res) => {

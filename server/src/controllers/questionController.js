@@ -1,5 +1,5 @@
-const Question = require('../models/Question');
-const Answer = require('../models/Answer');
+import Question from '../models/Question.js';
+import Answer from '../models/Answer.js';
 
 /**
  * Creates a new question for a lesson.

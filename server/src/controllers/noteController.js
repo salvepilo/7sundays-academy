@@ -1,4 +1,4 @@
-const Note = require('../models/Note');
+import Note from '../models/Note.js';
 
 /**
  * Creates a new note for a specific lesson.

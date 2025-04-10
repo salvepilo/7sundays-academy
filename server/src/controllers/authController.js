@@ -1,7 +1,8 @@
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
-const User = require('../models/User');
-const { sendPasswordResetEmail } = require('../utils/emailService');
+import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import User from '../models/User.js';
+import { sendPasswordResetEmail } from '../utils/emailService.js';
+
 
 // Funzione per generare il token JWT
 const signToken = (id) => {
@@ -58,7 +59,7 @@ exports.signup = async (req, res, next) => {
   }
 };
 
-export default exports;
+
 
 // Login utente
 exports.login = async (req, res, next) => {

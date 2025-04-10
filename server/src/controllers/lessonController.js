@@ -1,4 +1,6 @@
-const Lesson = require('../models/Lesson');
+import Lesson from '../models/Lesson.js';
+import Course from '../models/Course.js';
+import User from '../models/User.js';
 
 exports.getAllLessons = async (req, res) => {
     try {

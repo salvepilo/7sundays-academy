@@ -1,9 +1,9 @@
 /**
  * Controller per la gestione delle configurazioni email SMTP
  * Gestisce le operazioni CRUD sulle configurazioni email e il test della connessione
- */
-const EmailConfig = require('../models/EmailConfig');
-const nodemailer = require('nodemailer');
+*/
+import EmailConfig from '../models/EmailConfig.js';
+import nodemailer from 'nodemailer';
 
 /**
  * Ottiene tutte le configurazioni email

@@ -1,9 +1,9 @@
-const Test = require('../models/Test');
-const TestAttempt = require('../models/TestAttempt');
-const User = require('../models/User');
-const Course = require('../models/Course');
-const { OpenAI } = require('openai');
-
+import Test from '../models/Test.js';
+import TestAttempt from '../models/TestAttempt.js';
+import User from '../models/User.js';
+import Course from '../models/Course.js';
+import { OpenAI } from 'openai';
+import testController from './testController.js';
 // Inizializza il client OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -705,5 +705,4 @@ const generateFeedback = async (question, answer, score) => {
   }
 };
 
-const testController = exports;
 export default testController;
