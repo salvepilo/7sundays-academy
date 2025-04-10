@@ -141,107 +141,74 @@ connectWithRetry();
 // =========================================================
 
 // Importa i controller direttamente per garantire che le route funzionino
-const authController = require('./controllers/authController');
+const authController = require('./controllers/authController'); // Already imported correctly
 
-let coursesRoutes = null, usersRoutes = null;
+let coursesRoutes = null;
+let usersRoutes = null;
 
-let userController = null, courseController = null, lessonController = null, testController = null, networkingController = null, emailConfigController = null;
-let authRoutes = null, userRoutes = null, courseRoutes = null, lessonRoutes = null, testRoutes = null, networkingRoutes = null, emailConfigRoutes = null;
+let userController = null;
+let coursesController = null;
+let testController = null;
 
 try {
   userController = require('./controllers/userController');
 } catch (error) {
   console.warn('⚠️ userController non disponibile:', error.message);
 }
-
-try {
-  courseController = require('./controllers/courseController');
-} catch (error) {
-  console.warn('⚠️ courseController non disponibile:', error.message);
-}
-
-try {
-  lessonController = require('./controllers/lessonController');
-} catch (error) {
-  console.warn('⚠️ lessonController non disponibile:', error.message);
-}
-
 try {
   testController = require('./controllers/testController');
 } catch (error) {
   console.warn('⚠️ testController non disponibile:', error.message);
 }
-
-try {
-  networkingController = require('./controllers/networkingController');
-} catch (error) {
-  console.warn('⚠️ networkingController non disponibile:', error.message);
-}
-
-try {
-  emailConfigController = require('./controllers/emailConfigController');
-} catch (error) {
-  console.warn('⚠️ emailConfigController non disponibile:', error.message);
-}
-
-try {
-    coursesRoutes = require('./routes/courses');
-  } catch (error) {
-    console.warn('⚠️ coursesRoutes non disponibile');
-  }
-  
-try {
-    usersRoutes = require('./routes/users');
-  } catch (error) {
-    console.warn('⚠️ usersRoutes non disponibile');
-  }
-  
-  try {
-    emailConfigRoutes = require('./routes/emailConfigRoutes');
-  } catch (error) {
-    console.warn('⚠️ emailConfigRoutes non disponibile:', error.message);
-  }
-try {  authRoutes = require('./routes/authRoutes');
-} catch (error) {
-
-  console.warn('⚠️ authRoutes non disponibile, verranno usate route dirette');
-}
-
 try {
     coursesController = require('./controllers/coursesController');
 } catch (error) {
     console.warn('⚠️ coursesController non disponibile:', error.message);
 }
+let authRoutes = null;
+
+try {
+    coursesRoutes = require('./routes/courses');
+  } catch (error) {
+    console.warn('⚠️ coursesRoutes non disponibile', error.message);
+  }
+  
+try {
+    usersRoutes = require('./routes/users');
+  } catch (error) {
+    console.warn('⚠️ usersRoutes non disponibile', error.message);
+  }
+
+
+let lessonRoutes = null, testRoutes = null, networkingRoutes = null, emailConfigRoutes = null;
 
 
 try {
-  userRoutes = require('./routes/userRoutes');
-} catch (error) {
-  console.warn('⚠️ userRoutes non disponibile');
-}
+    testRoutes = require('./routes/testRoutes');
+  } catch (error) {
+    console.warn('⚠️ testRoutes non disponibile', error.message);
+  }
 
-try {
-  courseRoutes = require('./routes/courseRoutes');
-} catch (error) {
-  console.warn('⚠️ courseRoutes non disponibile');
-}
-
-try {
-  lessonRoutes = require('./routes/lessonRoutes');
-} catch (error) {
-  console.warn('⚠️ lessonRoutes non disponibile');
-}
-
-try {
-  testRoutes = require('./routes/testRoutes');
-} catch (error) {
-  console.warn('⚠️ testRoutes non disponibile');
-}
+  try {
+    lessonRoutes = require('./routes/lessonRoutes');
+  } catch (error) {
+    console.warn('⚠️ lessonRoutes non disponibile', error.message);
+  }
 
 try {
   networkingRoutes = require('./routes/networkingRoutes');
 } catch (error) {
-  console.warn('⚠️ networkingRoutes non disponibile');
+  console.warn('⚠️ networkingRoutes non disponibile', error.message);
+}
+try {
+  emailConfigRoutes = require('./routes/emailConfigRoutes');
+} catch (error) {
+  console.warn('⚠️ emailConfigRoutes non disponibile', error.message);
+}
+try {
+  authRoutes = require('./routes/authRoutes');
+} catch (error) {
+  console.warn('⚠️ authRoutes non disponibile', error.message);
 }
 
 // ------ DEFINIZIONE DIRETTA DELLE ROUTE DI AUTENTICAZIONE ------
@@ -258,33 +225,30 @@ app.post('/auth/login', authController.login);
 app.get('/auth/me', authController.protect, authController.getMe);
 
 // Route utente (se disponibili)
-if (userController) {
-  app.get('/api/users/me', authController.protect, userController.getMe);
-  app.get('/users/me', authController.protect, userController.getMe);
-}
+if (userController) app.get('/api/users/me', authController.protect, authController.getMe);
+
 
 // ------ CARICAMENTO ROUTE DA FILE SE DISPONIBILI ------
 
 // Applica rate limiter alle route API
 app.use('/api/', apiLimiter);
 
-// Mount delle route con prefisso /api
+//Mount delle route con prefisso /api
 if (authRoutes) app.use('/api/auth', authRoutes);
-if (courseRoutes) app.use('/api/courses', courseRoutes);
-if (lessonRoutes) app.use('/api/lessons', lessonRoutes);
 if (coursesRoutes) app.use('/api/courses', coursesRoutes);
+if (usersRoutes) app.use('/api/users', usersRoutes);
+if (lessonRoutes) app.use('/api/lessons', lessonRoutes);
 if (testRoutes) app.use('/api/tests', testRoutes);
 if (networkingRoutes) app.use('/api/networking', networkingRoutes);
 if (emailConfigRoutes) app.use('/api/email-config', emailConfigRoutes);
 
 // Versione senza /api per retrocompatibilità
 if (authRoutes) app.use('/auth', authRoutes);
-if (courseRoutes) app.use('/courses', courseRoutes);
+if (coursesRoutes) app.use('/courses', coursesRoutes);
 if (lessonRoutes) app.use('/lessons', lessonRoutes);
 if (testRoutes) app.use('/tests', testRoutes);
 if (networkingRoutes) app.use('/networking', networkingRoutes);
 if (emailConfigRoutes) app.use('/email-config', emailConfigRoutes);
-
 // =========================================================
 // ROUTE PUBBLICHE
 // =========================================================

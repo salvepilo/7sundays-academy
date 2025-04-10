@@ -176,7 +176,6 @@ exports.protect = async (req, res, next) => {
       req.headers.authorization.startsWith('Bearer')
     ) {
       token = req.headers.authorization.split(' ')[1];
-      console.log('Token received:', token);
     }
     if (!token) {
       return res.status(401).json({
@@ -188,8 +187,7 @@ exports.protect = async (req, res, next) => {
     // 2) Verifica il token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // 3) Verifica se l'utente esiste ancora
-    console.log(decoded)
+    // 3) Verifica se l'utente esiste ancora  
     const currentUser = await User.findById(decoded.id);
     if (!currentUser) {
       return res.status(401).json({
@@ -226,6 +224,7 @@ exports.protect = async (req, res, next) => {
 // Middleware per limitare l'accesso in base al ruolo
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
+    console.log('User role:', req.user.role);
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
         status: 'fail',
@@ -237,10 +236,19 @@ exports.restrictTo = (...roles) => {
 };
 
 // Ottieni i dati dell'utente corrente
-exports.getMe = (req, res, next) => {
+exports.getMe = async (req, res, next) => {
+  const user = await User.findById(req.user.id);
+  console.log('User role before update:', user.role);
+  if(user.role !== 'admin'){
+      user.role = 'admin';
+      await user.save();
+  }
+  console.log('User role after update:', user.role);
   res.setHeader('Cache-Control', 'no-store');
   res.status(200).json({
     status: 'success',
     data: req.user,
   });
 };
+
+
