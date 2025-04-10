@@ -176,6 +176,7 @@ exports.protect = async (req, res, next) => {
       req.headers.authorization.startsWith('Bearer')
     ) {
       token = req.headers.authorization.split(' ')[1];
+      console.log('Token received:', token);
     }
 
     if (!token) {
@@ -183,17 +184,22 @@ exports.protect = async (req, res, next) => {
         status: 'fail',
         message: 'Non sei autenticato. Effettua il login per accedere.',
       });
+    } else{
+        console.log('Token received:', token);
+      });
     }
 
     // 2) Verifica il token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     // 3) Verifica se l'utente esiste ancora
+    console.log(decoded)
     const currentUser = await User.findById(decoded.id);
     if (!currentUser) {
       return res.status(401).json({
         status: 'fail',
         message: "L'utente a cui appartiene questo token non esiste più.",
+        console.log('Current User:', currentUser);
       });
     }
 
@@ -213,6 +219,7 @@ exports.protect = async (req, res, next) => {
         message: 'Il tuo token è scaduto. Effettua nuovamente il login.',
       });
     }
+    console.error('JWT Verification Error:', err);
     console.error('Errore di autenticazione:', err);
     res.status(500).json({
       status: 'error',
