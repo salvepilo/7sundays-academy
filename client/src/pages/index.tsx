@@ -8,7 +8,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 
-export default function Home() {
+function Home() {
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -27,16 +27,16 @@ export default function Home() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // // Reindirizza gli utenti già autenticati alla dashboard
-  // useEffect(() => {
-  //   if (isAuthenticated) {
-  //     if (user?.role === 'admin') {
-  //       router.push('/admin/dashboard');
-  //     } else {
-  //       router.push('/dashboard');
-  //     }
-  //   }
-  // }, [isAuthenticated, router, user]);
+  // Reindirizza gli utenti già autenticati alla dashboard
+  useEffect(() => {
+    if (isAuthenticated) {
+      if (user?.role === 'admin') {
+        router.push('/admin/dashboard');
+      } else {
+        router.push('/dashboard');
+      }
+    }
+  }, [isAuthenticated, router, user]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -219,3 +219,5 @@ export default function Home() {
     </div>
   );
 }
+
+export default Home;
