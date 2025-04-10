@@ -26,10 +26,14 @@ router.delete('/deleteMe', userController.deleteMe);
 
 // Routes solo per admin
 router.use(authController.restrictTo('admin'));
-router.route('/')
-  .get(userController.getAllUsers);
- 
-router.route('/:id')
-  .get(userController.getUser);
+router
+  .route('/')
+  .get(userController.getAllUsers)
+  .post(userController.createUser);
+
+router
+  .route('/:id')
+  .get(userController.getUser)
+  .patch(userController.updateUser);
  
 module.exports = router;

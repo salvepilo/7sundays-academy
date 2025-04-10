@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
+import { format } from 'date-fns';
 import axios from 'axios';
 
 // Componenti
@@ -48,6 +49,18 @@ interface Lesson {
   };
 }
 
+interface Note {
+  _id: string;
+  user: string;
+  lesson: string;
+  content: string;
+  timestamp: number;
+  createdAt: Date;
+}
+
+
+
+
 export default function LessonDetail() {
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
@@ -62,6 +75,10 @@ export default function LessonDetail() {
   const [showTranscript, setShowTranscript] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [updateProgressInterval, setUpdateProgressInterval] = useState<NodeJS.Timeout | null>(null);
+  const [notes, setNotes] = useState<Note[] | []>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [newQuestionText, setNewQuestionText] = useState<string>('');
+
 
   // Reindirizza alla pagina di login se l'utente non è autenticato
   useEffect(() => {
@@ -145,6 +162,39 @@ export default function LessonDetail() {
       fetchLessonDetails();
     }
   }, [id, isAuthenticated, user]);
+
+  // Fetch the notes
+  useEffect(() => {
+    const fetchNotes = async () => {
+        if (!id || !isAuthenticated) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`/api/lessons/${id}/notes`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setNotes(response.data.notes);
+        } catch (error) {
+            console.error('Error fetching notes:', error);
+        }
+    };
+
+    if (id && isAuthenticated) {
+        fetchNotes();
+    }
+}, [id, isAuthenticated]);
+
+
+
+    // Carica le domande da localStorage all'avvio
+    useEffect(() => {
+        const storedQuestions = localStorage.getItem(`questions-${id}`);
+        if (storedQuestions) {
+            setQuestions(JSON.parse(storedQuestions));
+        }
+    }, [id]);
+
+
 
   // Gestisce l'aggiornamento del progresso
   useEffect(() => {
@@ -264,6 +314,78 @@ export default function LessonDetail() {
     }
   }, [lesson]);
 
+  const handleAddNote = async (text: string) => {
+    if (!text.trim() || !videoRef.current) return;
+    try {
+        const token = localStorage.getItem('token');
+        const response = await axios.post(`/api/lessons/${id}/notes`, {
+            content: text,
+            timestamp: Math.floor(videoRef.current.currentTime),
+        }, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        setNotes([...notes, response.data.note]);
+        console.log(response.data.note);
+
+
+    } catch (error) {
+        console.error('Error creating note:', error);
+    }
+  };
+
+  const formatTimestamp = (timestamp: number): string => {
+    const date = new Date(0);
+    date.setSeconds(timestamp);
+    return date.toISOString().substring(11, 19); // hh:mm:ss
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+        const token = localStorage.getItem('token');
+        await axios.delete(`/api/lessons/${id}/notes/${noteId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        setNotes(notes.filter((note) => note._id !== noteId));
+    } catch (error) {
+        console.error('Error deleting note:', error);
+    }
+  };
+
+  const handleAddQuestion = async (text: string) => {
+    if (!text.trim()) return;
+
+    const newQuestion: Question = {
+        id: Math.random().toString(36).substring(7), // Generate a random ID
+        text: text,
+    };
+
+    setQuestions((prevQuestions) => [...prevQuestions, newQuestion]);
+
+    
+    localStorage.setItem(`questions-${id}`, JSON.stringify([...questions, newQuestion]));
+
+  };
+
+  const handleDeleteNote = (noteId: string) => {
+    setNotes((prevNotes) => prevNotes.filter((note) => note.id !== noteId));
+    if (editingNoteId === noteId) {
+      setEditingNoteId(null);
+      setEditedNoteText('');
+    }    
+  };
+
+  const handleDeleteQuestion = (questionId: string) => {
+
+
+    setQuestions((prevQuestions) => prevQuestions.filter((question) => question.id !== questionId));
+    
+    // Aggiorna le domande in localStorage
+    const updatedQuestions = questions.filter((question) => question.id !== questionId)
+    localStorage.setItem(`questions-${id}`, JSON.stringify(updatedQuestions));
+  };
+
+
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -352,15 +474,16 @@ export default function LessonDetail() {
                       ref={videoRef}
                       className="w-full aspect-video"
                       controls
+                      allowFullScreen
                       controlsList={lesson.protection.downloadDisabled ? 'nodownload' : ''}
                       onPlay={handleVideoPlay}
                       onPause={handleVideoPause}
                       onEnded={handleVideoEnded}
                       poster="/images/video-poster.jpg"
                     >
-                      <source 
+                      <source
                         src={videoToken ? `${lesson.videoUrl}?token=${videoToken}` : lesson.videoUrl} 
-                        type="video/mp4" 
+                        type="video/mp4"
                       />
                       Il tuo browser non supporta il tag video.
                     </video>
@@ -373,13 +496,21 @@ export default function LessonDetail() {
                 )}
               </div>
 
+              {/* Barra di progresso */}
+              <div className="mt-2 w-full h-2 bg-gray-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary-500 rounded-full transition-all duration-300"
+                  style={{ width: `${lesson?.duration ? (currentTime / lesson.duration) * 100 : 0}%` }}
+                ></div>
+              </div>
+
               {/* Titolo e descrizione */}
-              <div className="mt-6 bg-gray-800 rounded-lg p-6 text-white">
-                <h1 className="text-2xl font-bold mb-2">{lesson.title}</h1>
-                <div className="flex items-center text-sm text-gray-400 mb-4">
-                  <span>Lezione {lesson.order}</span>
+              <div className="mt-6  p-6 text-white">
+                <h1 className="text-4xl font-bold mb-2">{lesson.title}</h1>
+                <div className="flex items-center text-lg text-gray-400 mb-4">
+                  <span>Lesson {lesson.order}</span>
                   <span className="mx-2">•</span>
-                  <span>{lesson.formattedDuration}</span>
+                  <span>Duration: {lesson.formattedDuration}</span>
                 </div>
                 <p className="text-gray-300 whitespace-pre-line">{lesson.description}</p>
               </div>
@@ -387,7 +518,7 @@ export default function LessonDetail() {
               {/* Navigazione tra lezioni */}
               <div className="mt-6 grid grid-cols-2 gap-4">
                 {lesson.prevLesson && (
-                  <Link 
+                  <Link
                     href={`/lessons/${lesson.prevLesson._id}`}
                     className="bg-gray-800 hover:bg-gray-700 p-4 rounded-lg flex items-center text-white transition duration-200"
                   >
@@ -400,7 +531,7 @@ export default function LessonDetail() {
                     </div>
                   </Link>
                 )}
-                
+
                 {lesson.nextLesson && (
                   <Link 
                     href={`/lessons/${lesson.nextLesson._id}`}
@@ -420,6 +551,20 @@ export default function LessonDetail() {
 
             {/* Colonna laterale: Risorse e trascrizione */}
             <div className="lg:col-span-1">
+                {/* Note */}
+                <div className="bg-gray-800 rounded-lg overflow-hidden mb-6">
+                    <div className="p-4 bg-gray-700 flex justify-between items-center">
+                        <h2 className="text-lg font-semibold text-white">Appunti</h2>
+                    </div>
+                    <NotesSection notes={notes} handleAddNote={handleAddNote} formatTimestamp={formatTimestamp} handleDeleteNote={handleDeleteNote}/>
+                </div>
+                {/* Q&A */}
+                <div className="bg-gray-800 rounded-lg overflow-hidden mb-6">
+                    <div className="p-4 bg-gray-700 flex justify-between items-center">
+                        <h2 className="text-lg font-semibold text-white">Q&A</h2>
+                    </div>
+                    <QandASection questions={questions} handleAddQuestion={handleAddQuestion} handleDeleteQuestion={handleDeleteQuestion}/>
+                </div>
               {/* Risorse */}
               <div className="bg-gray-800 rounded-lg overflow-hidden mb-6">
                 <div 
@@ -441,32 +586,14 @@ export default function LessonDetail() {
                     {lesson.resources && lesson.resources.length > 0 ? (
                       <ul className="space-y-3">
                         {lesson.resources.map((resource, index) => (
-                          <li key={index}>
-                            <a 
-                              href={resource.url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="flex items-center text-primary-400 hover:text-primary-300"
-                            >
-                              {resource.type === 'pdf' && (
-                                <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
-                                </svg>
-                              )}
-                              {resource.type === 'link' && (
-                                <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                  <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-                                  <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
-                                </svg>
-                              )}
-                              {resource.type === 'file' && (
-                                <svg className="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clipRule="evenodd" />
-                                </svg>
-                              )}
-                              {resource.title}
-                            </a>
-                          </li>
+                            <li key={question.id} className="bg-gray-700 p-2 rounded-md relative">
+                                <div>
+                                    <p className="whitespace-pre-wrap">{question.text}</p>
+                                </div>
+                                <div className="absolute top-2 right-2 flex gap-2">
+                                  <button className="text-xs text-gray-400 hover:text-gray-300" onClick={() => handleDeleteQuestion(question.id)}>Elimina</button>
+                                </div>
+                            </li>
                         ))}
                       </ul>
                     ) : (
@@ -492,7 +619,7 @@ export default function LessonDetail() {
                       <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  
+
                   {showTranscript && (
                     <div className="p-4 max-h-96 overflow-y-auto">
                       <p className="text-gray-300 whitespace-pre-line">{lesson.transcript}</p>
@@ -521,4 +648,47 @@ export default function LessonDetail() {
       <Footer />
     </div>
   );
+}
+
+function NotesSection({ notes, handleAddNote, formatTimestamp, handleDeleteNote }: { notes: Note[], handleAddNote: (text: string) => void, formatTimestamp: (timestamp: number) => string, handleDeleteNote: (noteId: string) => void }) {
+    const [newNoteText, setNewNoteText] = useState('');
+  
+    return (
+      <div className='p-4'>
+        <input type='text' placeholder='Scrivi qui i tuoi appunti' value={newNoteText} onChange={(e) => setNewNoteText(e.target.value)} className='w-full bg-gray-700 text-white p-2 rounded-md mb-2'/>
+        <button onClick={() => handleAddNote(newNoteText)} className='btn-primary'>Aggiungi appunto</button>
+        <ul className='mt-4 space-y-2'>
+          {notes.map((note) => (
+            <li key={note._id} className="bg-gray-700 p-2 rounded-md relative">
+              <div >
+                <p className="whitespace-pre-wrap">{note.content}</p>
+                <p className="text-xs text-gray-400 mt-1">{formatTimestamp(note.timestamp)} - {format(new Date(note.createdAt), 'dd/MM/yyyy')}</p>
+              </div>
+              <div className="absolute top-2 right-2 flex gap-2">
+                <button className="text-xs text-gray-400 hover:text-gray-300" onClick={() => handleDeleteNote(note._id)}>Elimina</button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+}
+
+function QandASection({ questions, handleAddQuestion, handleDeleteQuestion }: { questions: any[], handleAddQuestion: (text: string) => void, handleDeleteQuestion: (questionId: string) => void }) {
+    const [newQuestionText, setNewQuestionText] = useState('');
+  
+    return (
+      <div className='p-4'>
+        <input type='text' placeholder='Scrivi qui la tua domanda' className='w-full bg-gray-700 text-white p-2 rounded-md mb-2' value={newQuestionText} onChange={(e) => setNewQuestionText(e.target.value)}/>
+        <button className='btn-primary' onClick={() => handleAddQuestion(newQuestionText)}>Aggiungi domanda</button>
+        <ul className='mt-4 space-y-2'>
+        {questions.map((question) => (
+            <li key={question.id} className="bg-gray-700 p-2 rounded-md relative">
+                <p className="whitespace-pre-wrap">{question.text}</p>
+                <button className="text-xs text-gray-400 hover:text-gray-300" onClick={() => handleDeleteQuestion(question.id)}>Elimina</button>
+            </li>
+        ))}
+        </ul>
+      </div>
+    );
 }

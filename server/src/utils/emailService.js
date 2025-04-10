@@ -120,7 +120,7 @@ async function sendEmail(options) {
  */
 async function sendWelcomeEmail(user) {
   const subject = 'Benvenuto su 7Sundays Academy!';
-  const text = `Ciao ${user.name},\n\nBenvenuto su 7Sundays Academy! Siamo felici di averti con noi.\n\nPuoi accedere alla piattaforma con la tua email: ${user.email}\n\nBuon apprendimento!\n\nIl team di 7Sundays Academy`;
+  const text = `Ciao ${user.name}, Benvenuto su 7Sundays Academy! Siamo felici di averti con noi. Inizia subito ad imparare qualcosa di nuovo! Puoi accedere alla piattaforma con la tua email: ${user.email} Buon apprendimento! Il team di 7Sundays Academy`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #3b82f6;">Benvenuto su 7Sundays Academy!</h2>
@@ -152,7 +152,7 @@ async function sendWelcomeEmail(user) {
  */
 async function sendPasswordResetEmail(user, resetToken, resetUrl) {
   const subject = 'Reset della password - 7Sundays Academy';
-  const text = `Ciao ${user.name},\n\nHai richiesto il reset della password. Clicca sul seguente link per reimpostare la tua password:\n\n${resetUrl}\n\nQuesto link scadrà tra 10 minuti.\n\nSe non hai richiesto il reset della password, ignora questa email.\n\nIl team di 7Sundays Academy`;
+  const text = `Ciao ${user.name}, Hai richiesto il reset della password. Clicca sul seguente link per reimpostare la tua password: ${resetUrl} Questo link scadrà tra 10 minuti. Se non hai richiesto il reset della password, ignora questa email. Il team di 7Sundays Academy`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #3b82f6;">Reset della Password</h2>
@@ -188,7 +188,7 @@ async function sendPasswordResetEmail(user, resetToken, resetUrl) {
  */
 async function sendCourseCompletionEmail(user, course) {
   const subject = `Congratulazioni! Hai completato il corso "${course.title}"`;
-  const text = `Ciao ${user.name},\n\nComplimenti! Hai completato con successo il corso "${course.title}".\n\nContinua a migliorare le tue competenze con i nostri altri corsi.\n\nIl team di 7Sundays Academy`;
+  const text = `Ciao ${user.name}, Complimenti! Hai completato con successo il corso ${course.title}. Cosa aspetti? Continua a migliorare le tue competenze con i nostri altri corsi. Il team di 7Sundays Academy`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #3b82f6;">Congratulazioni!</h2>
@@ -227,7 +227,7 @@ async function sendCourseCompletionEmail(user, course) {
  */
 async function sendTestResultEmail(user, test, score, passed) {
   const subject = `Risultati del test "${test.title}" - 7Sundays Academy`;
-  const text = `Ciao ${user.name},\n\nHai completato il test "${test.title}" con un punteggio di ${score}%.\n\n${passed ? 'Congratulazioni! Hai superato il test.' : 'Purtroppo non hai superato il test. Riprova dopo aver ripassato il materiale.'}\n\nIl team di 7Sundays Academy`;
+  const text = `Ciao ${user.name}, Hai completato il test ${test.title} con un punteggio di ${score}%. ${passed ? 'Congratulazioni! Hai superato il test.' : 'Purtroppo non hai superato il test. Riprova dopo aver ripassato il materiale.'} Il team di 7Sundays Academy`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2 style="color: #3b82f6;">Risultati del Test</h2>

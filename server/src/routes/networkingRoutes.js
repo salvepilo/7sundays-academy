@@ -9,6 +9,10 @@ router.use(authController.protect);
 
 // Routes per il networking
 router.get('/contacts', networkingController.getContacts);
+router.post('/contacts', networkingController.createContact);
+router.patch('/contacts/:id', networkingController.updateContact);
+router.delete('/contacts/:id', networkingController.deleteContact);
+
 router.get('/contacts/:id', networkingController.getContactDetails);
 router.post('/contacts/search', networkingController.searchContacts);
 router.post('/contacts/request', networkingController.sendContactRequest);

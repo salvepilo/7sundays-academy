@@ -19,6 +19,7 @@ router.get('/:id/certificate', courseController.generateCertificate);
 
 // Route solo per admin
 router.use(authController.restrictTo('admin'));
+
 router.post('/', courseController.createCourse);
 router.patch('/:id', courseController.updateCourse);
 router.post('/:courseId/lessons/:lessonId', courseController.addLessonToCourse);

@@ -104,6 +104,7 @@ exports.getCourse = async (req, res) => {
     let courseWithProgress = course.toObject();
     if (req.user) {
       const user = await User.findById(req.user.id);
+
       const enrollment = user.enrolledCourses.find(
         e => e.courseId.toString() === course._id.toString()
       );
@@ -116,6 +117,7 @@ exports.getCourse = async (req, res) => {
         courseWithProgress.lastWatched = enrollment.lastWatched;
       }
     }
+    courseWithProgress.name = courseWithProgress.title
 
     res.status(200).json({
       status: 'success',
@@ -136,8 +138,10 @@ exports.getCourse = async (req, res) => {
 exports.createCourse = async (req, res) => {
   try {
     console.log("Received data for creating course:", req.body);
+    
+    const { name, ...otherData } = req.body;
     // Imposta l'istruttore come l'utente corrente (admin)
-    req.body.instructor = req.user.id;
+    req.body = { title: name, instructor: req.user.id, ...otherData }
     
     const newCourse = await Course.create(req.body);
 

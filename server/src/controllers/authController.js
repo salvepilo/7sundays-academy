@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { sendPasswordResetEmail } = require('../utils/emailService');
 
 // Funzione per generare il token JWT
 const signToken = (id) => {
@@ -90,6 +91,81 @@ exports.login = async (req, res, next) => {
   }
 };
 
+// Richiesta di reset password
+exports.forgotPassword = async (req, res, next) => {
+  try {
+    // 1) Trova l'utente con l'email fornita
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Nessun utente trovato con questa email.',
+      });
+    }
+
+    // 2) Genera il token di reset password
+    const resetToken = user.createPasswordResetToken();
+    await user.save({ validateBeforeSave: false });
+
+    // 3) Invia l'email con il token
+    const resetUrl = `${req.protocol}://${req.get(
+      'host'
+    )}/resetPassword/${resetToken}`;
+
+    try {
+      await sendPasswordResetEmail(user, resetToken, resetUrl);
+      res.status(200).json({
+        status: 'success',
+        message: 'Email di reset password inviata!',
+      });
+    } catch (err) {
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+      await user.save({ validateBeforeSave: false });
+
+      console.error('Errore durante l\'invio dell\'email:', err);
+      return res.status(500).json({
+        status: 'error',
+        message: 'Errore durante l\'invio dell\'email. Riprova più tardi.',
+      });
+    }
+  } catch (err) {
+    console.error('Errore durante la richiesta di reset password:', err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Errore durante la richiesta di reset password. Riprova più tardi.',
+    });
+  }
+};
+
+// Reset della password
+exports.resetPassword = async (req, res, next) => {
+  try {
+    // 1) Ottieni l'utente in base al token
+    const hashedToken = require('crypto').createHash('sha256').update(req.params.token).digest('hex');
+    const user = await User.findOne({ passwordResetToken: hashedToken, passwordResetExpires: { $gt: Date.now() } });
+
+    // 2) Se il token è scaduto o non valido
+    if (!user) return res.status(400).json({ status: 'fail', message: 'Token non valido o scaduto.' });
+
+    // 3) Aggiorna la password
+    user.password = req.body.password;
+    user.passwordConfirm = req.body.passwordConfirm;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+
+    // 4) Genera e invia il token JWT
+    createSendToken(user, 200, res);
+  } catch (err) {
+    console.error('Errore durante il reset della password:', err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Errore durante il reset della password. Riprova più tardi.',
+    });
+  }
+};
+
 // Middleware per proteggere le route che richiedono autenticazione
 exports.protect = async (req, res, next) => {
   try {
@@ -160,6 +236,7 @@ exports.restrictTo = (...roles) => {
 
 // Ottieni i dati dell'utente corrente
 exports.getMe = (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store');
   res.status(200).json({
     status: 'success',
     data: req.user,
