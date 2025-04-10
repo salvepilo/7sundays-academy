@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "server": "cd server && PORT=5001 nodemon --es-module-specifier-resolution=node src/index.js",
+    "start": "cd server && PORT=5001 nodemon --es-module-specifier-resolution=node src/index.js",
     "dev": "npm run server && cd client && npm run dev",
     "install-all": "npm install && cd client && npm install && cd ../server && npm install",
     "build": "cd client && npm run build"

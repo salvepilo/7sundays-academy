@@ -1,19 +1,18 @@
-const dotenv = require('dotenv');
+import dotenv from 'dotenv';
 dotenv.config();
 
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
-const path = require('path');
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
+import path from 'path';
 
 // Import controllers
 
 import * as authController from './controllers/authController.js';
-import * as userController from './controllers/userController.js';
-import * as coursesController from './controllers/coursesController.js';
+import * as courseController from './controllers/courseController.js';
 import * as testController from './controllers/testController.js';
 
 // Import routes
@@ -106,7 +105,7 @@ const apiLimiter = rateLimit({
 // Database Connection
 // =========================================================
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/7sundaysacademy';
+const MONGODB_URI = 'mongodb://localhost:27017/7sundaysacademy';
 const MONGODB_OPTIONS = {
   useNewUrlParser: true,
   useUnifiedTopology: true,

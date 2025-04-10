@@ -3,11 +3,12 @@ import * as TestAttempt from '../models/TestAttempt.js';
 import * as User from '../models/User.js';
 import * as Course from '../models/Course.js';
 
+import OpenAI from 'openai';
 import dotenv from 'dotenv';
 
 // Inizializza il client OpenAI
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: 'YOUR_OPENAI_API_KEY',
 });
 
 // Ottieni tutti i test (con filtri opzionali)
