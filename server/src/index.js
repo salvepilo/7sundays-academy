@@ -159,10 +159,6 @@ import emailConfigRoutes from './routes/emailConfigRoutes.js';
 app.post('/api/auth/register', authController.signup); // Cambiato da register a signup
 app.post('/api/auth/login', authController.login);
 
-// Versione senza /api per retrocompatibilità
-app.post('/auth/register', authController.signup); // Cambiato da register a signup
-app.post('/auth/login', authController.login);
-
 // Applica il middleware di autenticazione a tutte le routes protette
 app.use('/api/auth/me', authController.protect);
 app.use('/auth/me', authController.protect);
@@ -188,14 +184,6 @@ try {
   app.use('/networking', authController.protect);
   app.use('/email-config', authController.protect);
 
-  // Mount delle route con prefisso /api
-  app.use('/api/auth', authRoutes);
-  app.use('/api/courses', courseRoutes);
-  app.use('/api/users', userRoutes);
-  app.use('/api/lessons', lessonRoutes);
-  app.use('/api/tests', testRoutes);
-  app.use('/api/networking', networkingRoutes);
-  app.use('/api/email-config', emailConfigRoutes);
 
   // Versione senza /api per retrocompatibilità
   app.use('/auth', authRoutes);
@@ -204,6 +192,13 @@ try {
   app.use('/lessons', lessonRoutes);
   app.use('/tests', testRoutes);
   app.use('/networking', networkingRoutes);
+   // Mount delle route con prefisso /api
+   app.use('/api/auth', authRoutes);
+   app.use('/api/courses', courseRoutes);
+   app.use('/api/users', userRoutes);
+   app.use('/api/lessons', lessonRoutes);
+   app.use('/api/tests', testRoutes);
+   app.use('/api/networking', networkingRoutes);
   app.use('/email-config', emailConfigRoutes);
 
 } catch(error){
