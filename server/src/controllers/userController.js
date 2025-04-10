@@ -2,8 +2,6 @@ import User from '../models/User.js';
 import Course from '../models/Course.js';
 import TestAttempt from '../models/TestAttempt.js';
 
-const userController = {};
-
 // Funzione di supporto per filtrare gli oggetti
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
@@ -13,8 +11,8 @@ const filterObj = (obj, ...allowedFields) => {
   return newObj;
 };
 
-// Get all users (only for admin)a
-userController.getAllUsers = async (req, res) => {
+// Get all users (only for admin)
+export const getAllUsers = async (req, res) => {
   try {
     const users = await User.find();
 
@@ -35,7 +33,7 @@ userController.getAllUsers = async (req, res) => {
 };
 
 // Create a new user (only for admin)
-userController.createUser = async (req, res) => {
+export const createUser = async (req, res) => {
   try {
     const newUser = await User.create({
       name: req.body.name,
@@ -64,7 +62,7 @@ userController.createUser = async (req, res) => {
 };
 
 // Get a single user by ID (only for admin)
-userController.getUser = async (req, res) => {
+export const getUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
 
@@ -91,7 +89,7 @@ userController.getUser = async (req, res) => {
 };
 
 // Update an existing user (only for admin)
-userController.updateUser = async (req, res) => {
+export const updateUser = async (req, res) => {
   try {
     // Non permettere l'aggiornamento della password con questa route
     if (req.body.password || req.body.passwordConfirm) {
@@ -137,7 +135,7 @@ userController.updateUser = async (req, res) => {
 };
 
 // Update the current user's data
-userController.updateMe = async (req, res) => {
+export const updateMe = async (req, res) => {
   try {
     // Verifica che non si stia tentando di cambiare la password
     if (req.body.password || req.body.passwordConfirm) {
@@ -172,7 +170,7 @@ userController.updateMe = async (req, res) => {
 };
 
 // Deactivate the current user's account
-userController.deleteMe = async (req, res) => {
+export const deleteMe = async (req, res) => {
   try {
     await User.findByIdAndUpdate(req.user.id, { active: false });
 
@@ -190,7 +188,7 @@ userController.deleteMe = async (req, res) => {
 };
 
 // Get the current user's profile with statistics
-userController.getMyProfile = async (req, res) => {
+export const getMyProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
 
@@ -268,5 +266,12 @@ userController.getMyProfile = async (req, res) => {
   }
 };
 
-
-export default userController;
+const userController = {
+  getAllUsers,
+  createUser,
+  getUser,
+  updateUser,
+  updateMe,
+  deleteMe,
+  getMyProfile,
+};export default userController;

@@ -6,7 +6,7 @@ import Answer from '../models/Answer.js';
  * @param {object} req - The request object.
  * @param {object} res - The response object.
  */
-exports.createQuestion = async (req, res) => {
+export const createQuestion = async (req, res) => {
   try {
     const newQuestion = await Question.create(req.body);
     res.status(201).json({
@@ -29,7 +29,7 @@ exports.createQuestion = async (req, res) => {
  * @param {object} req - The request object.
  * @param {object} res - The response object.
  */
-exports.getQuestions = async (req, res) => {
+export const getQuestions = async (req, res) => {
   try {
     const questions = await Question.find({ lesson: req.params.id });
     res.status(200).json({
@@ -53,7 +53,7 @@ exports.getQuestions = async (req, res) => {
  * @param {object} req - The request object.
  * @param {object} res - The response object.
  */
-exports.createAnswer = async (req, res) => {
+export const createAnswer = async (req, res) => {
     try {
         req.body.question = req.params.questionId;
         const newAnswer = await Answer.create(req.body);
@@ -77,7 +77,7 @@ exports.createAnswer = async (req, res) => {
  * @param {object} req - The request object.
  * @param {object} res - The response object.
  */
-exports.deleteQuestion = async (req, res) => {
+export const deleteQuestion = async (req, res) => {
     try {
         const question = await Question.findByIdAndDelete(req.params.questionId);
     
@@ -108,7 +108,7 @@ exports.deleteQuestion = async (req, res) => {
  * @param {object} req - The request object.
  * @param {object} res - The response object.
  */
-exports.deleteAnswer = async (req, res) => {
+export const deleteAnswer = async (req, res) => {
     try {
         const answer = await Answer.findByIdAndDelete(req.params.answerId);
 
@@ -130,4 +130,12 @@ exports.deleteAnswer = async (req, res) => {
             message: 'Errore nell\'eliminazione della risposta',
         });
         }
+};
+
+export default {
+    createQuestion,
+    getQuestions,
+    createAnswer,
+    deleteQuestion,
+    deleteAnswer,
 };

@@ -5,7 +5,7 @@ import Note from '../models/Note.js';
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
-exports.createNote = async (req, res) => {
+export const createNote = async (req, res) => {
   try {
     const { lessonId } = req.params;
     const { content } = req.body;
@@ -37,7 +37,7 @@ exports.createNote = async (req, res) => {
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
-exports.getNotes = async (req, res) => {
+export const getNotes = async (req, res) => {
   try {
     const { id: lessonId } = req.params;
     const userId = req.user.id;
@@ -65,7 +65,7 @@ exports.getNotes = async (req, res) => {
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
-exports.deleteNote = async (req, res) => {
+export const deleteNote = async (req, res) => {
   try {
     const { noteId } = req.params;
 
@@ -89,4 +89,10 @@ exports.deleteNote = async (req, res) => {
       message: 'Error deleting a note',
     });
   }
+};
+
+export default {
+  createNote,
+  getNotes,
+  deleteNote
 };

@@ -4,7 +4,7 @@ import User from '../models/User.js';
 
 
 // Ottieni tutti i corsi (con filtri opzionali)
-exports.getAllCourses = async (req, res) => {
+export const getAllCourses = async (req, res) => {
   try {
     // Costruisci la query di filtro
     const queryObj = { ...req.query };
@@ -82,7 +82,7 @@ exports.getAllCourses = async (req, res) => {
 };
 
 // Ottieni un singolo corso per ID
-exports.getCourse = async (req, res) => {
+export const getCourse = async (req, res) => {
   try {
     const course = await Course.findById(req.params.id).populate('lessons');
 
@@ -136,7 +136,7 @@ exports.getCourse = async (req, res) => {
 };
 
 // Crea un nuovo corso (solo admin)
-exports.createCourse = async (req, res) => {
+export const createCourse = async (req, res) => {
   try {
     console.log("Received data for creating course:", req.body);
     
@@ -162,7 +162,7 @@ exports.createCourse = async (req, res) => {
 };
 
 // Aggiorna un corso (solo admin)
-exports.updateCourse = async (req, res) => {
+export const updateCourse = async (req, res) => {
   try {
     console.log('Received data for updating course:', req.body, 'course id:', req.params.id);
     const course = await Course.findByIdAndUpdate(req.params.id, req.body, {
@@ -193,7 +193,7 @@ exports.updateCourse = async (req, res) => {
 };
 
 // Elimina un corso (solo admin)
-exports.deleteCourse = async (req, res) => {
+export const deleteCourse = async (req, res) => {
   try {
     const courseId = req.params.id;
     const course = await Course.findByIdAndDelete(courseId);
@@ -226,7 +226,7 @@ exports.deleteCourse = async (req, res) => {
 };
 
 // Aggiungi una lezione a un corso (solo admin)
-exports.addLessonToCourse = async (req, res) => {
+export const addLessonToCourse = async (req, res) => {
   try {
     console.log("addLessonToCourse called");
     const { courseId, lessonId } = req.params;
@@ -259,7 +259,7 @@ exports.addLessonToCourse = async (req, res) => {
 };
 
 // Rimuovi una lezione da un corso (solo admin)
-exports.removeLessonFromCourse = async (req, res) => {
+export const removeLessonFromCourse = async (req, res) => {
   try{
     const { courseId, lessonId } = req.params;
     console.log('removeLessonFromCourse called with courseId:', courseId, 'and lessonId:', lessonId);
@@ -286,7 +286,7 @@ exports.removeLessonFromCourse = async (req, res) => {
 };
 
 // Iscrivi l'utente corrente a un corso
-exports.enrollInCourse = async (req, res) => {
+export const enrollInCourse = async (req, res) => {
   try {
     const courseId = req.params.id;
     const userId = req.user.id;
@@ -346,7 +346,7 @@ exports.enrollInCourse = async (req, res) => {
 };
 
 // Aggiorna il progresso dell'utente in un corso
-exports.updateProgress = async (req, res) => {
+export const updateProgress = async (req, res) => {
   try {
     const { courseId } = req.params;
     const { lessonId, progress, timestamp } = req.body;
@@ -434,7 +434,7 @@ exports.updateProgress = async (req, res) => {
  * @returns {object} - Returns the course statistics
  */
 
-exports.getCourseStats = async (req, res) => {
+export const getCourseStats = async (req, res) => {
   try {
     // Statistiche generali dei corsi
     const totalCourses = await Course.countDocuments();
@@ -475,7 +475,7 @@ exports.getCourseStats = async (req, res) => {
 };
 
 // Ottieni i corsi a cui l'utente è iscritto
-exports.getEnrolledCourses = async (req, res) => {
+export const getEnrolledCourses = async (req, res) => {
   try {
     const userId = req.user.id;
     
@@ -523,7 +523,7 @@ exports.getEnrolledCourses = async (req, res) => {
 };
 
 // Genera un certificato per un corso completato
-exports.generateCertificate = async (req, res) => {
+export const generateCertificate = async (req, res) => {
   try {
     const courseId = req.params.id;
     const userId = req.user.id;
@@ -578,7 +578,7 @@ exports.generateCertificate = async (req, res) => {
 };
 
 // Pubblica o nascondi un corso (solo admin)
-exports.publishCourse = async (req, res) => {
+export const publishCourse = async (req, res) => {
   try {
     const courseId = req.params.id;
     const { isPublished } = req.body;
@@ -625,3 +625,21 @@ exports.publishCourse = async (req, res) => {
     });
   }
 };
+
+export default {
+  getAllCourses,
+  getCourse,
+  createCourse,
+  updateCourse,
+  deleteCourse,
+  addLessonToCourse,
+  removeLessonFromCourse,
+  enrollInCourse,
+  updateProgress,
+  getCourseStats,
+  getEnrolledCourses,
+  generateCertificate,
+  publishCourse
+
+
+}

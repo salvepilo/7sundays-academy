@@ -2,7 +2,7 @@ import Lesson from '../models/Lesson.js';
 import Course from '../models/Course.js';
 import User from '../models/User.js';
 
-exports.getAllLessons = async (req, res) => {
+export const getAllLessons = async (req, res) => {
     try {
         const lessons = await Lesson.find();
     res.status(200).json({
@@ -19,7 +19,7 @@ exports.getAllLessons = async (req, res) => {
 
 
 
-exports.getLessonById = async (req, res) => {  try {
+export const getLessonById = async (req, res) => {  try {
     const lesson = await Lesson.findById(req.params.id);
 
     if (!lesson) {
@@ -41,7 +41,7 @@ exports.getLessonById = async (req, res) => {  try {
 };
 
 
-exports.createLesson = async (req, res) => {
+export const createLesson = async (req, res) => {
   try {
     console.log('Data received for createLesson:', req.body);
 
@@ -63,7 +63,7 @@ exports.createLesson = async (req, res) => {
 
 };
 
-exports.updateLesson = async (req, res) => {
+export const updateLesson = async (req, res) => {
   try {
     console.log('Data received for updateLesson:', req.body, 'Lesson ID:', req.params.id);
 
@@ -88,7 +88,7 @@ exports.updateLesson = async (req, res) => {
   }
 };
 
-exports.deleteLesson = async (req, res) => {
+export const deleteLesson = async (req, res) => {
     try {
       const lessonId = req.params.id;
         await Lesson.findByIdAndDelete(lessonId);
@@ -109,7 +109,7 @@ exports.deleteLesson = async (req, res) => {
 
 
 // Ottieni tutte le lezioni di un corso
-exports.getLessons = async (req, res) => {
+export const getLessons = async (req, res) => {
   try {
     const { courseId } = req.params;
     
@@ -171,7 +171,7 @@ exports.getLessons = async (req, res) => {
 };
 
 // Ottieni una singola lezione per ID
-exports.getLesson = async (req, res) => {
+export const getLesson = async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -224,7 +224,7 @@ exports.getLesson = async (req, res) => {
 };
 
 // Crea una nuova lezione (solo admin)
-exports.createLesson = async (req, res) => {
+export const createLesson = async (req, res) => {
   try {
     const { courseId } = req.params;
     
@@ -262,7 +262,7 @@ exports.createLesson = async (req, res) => {
 };
 
 // Aggiorna una lezione (solo admin)
-exports.updateLesson = async (req, res) => {
+export const updateLesson = async (req, res) => {
   try {
     const lesson = await Lesson.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -292,7 +292,7 @@ exports.updateLesson = async (req, res) => {
 };
 
 // Elimina una lezione (solo admin)
-exports.deleteLesson = async (req, res) => {
+export const deleteLesson = async (req, res) => {
   try {
     const lesson = await Lesson.findById(req.params.id);
 
@@ -330,7 +330,7 @@ exports.deleteLesson = async (req, res) => {
 };
 
 // Aggiorna il progresso di visualizzazione (NUOVA FUNZIONE)
-exports.updateWatchProgress = async (req, res) => {
+export const updateWatchProgress = async (req, res) => {
   try {
     const { id } = req.params;
     const { timestamp, completed } = req.body;
@@ -408,7 +408,7 @@ exports.updateWatchProgress = async (req, res) => {
 };
 
 // Ottieni le risorse della lezione (NUOVA FUNZIONE)
-exports.getLessonResources = async (req, res) => {
+export const getLessonResources = async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -464,7 +464,7 @@ exports.getLessonResources = async (req, res) => {
 };
 
 // Ottieni token per accesso al video (NUOVA FUNZIONE)
-exports.getVideoToken = async (req, res) => {
+export const getVideoToken = async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -522,7 +522,7 @@ exports.getVideoToken = async (req, res) => {
 };
 
 // Pubblica o nascondi una lezione (solo admin) (NUOVA FUNZIONE)
-exports.publishLesson = async (req, res) => {
+export const publishLesson = async (req, res) => {
   try {
     const { id } = req.params;
     const { isPublished } = req.body;
@@ -568,7 +568,7 @@ exports.publishLesson = async (req, res) => {
 };
 
 // Aggiorna l'ordine di una lezione (solo admin) (NUOVA FUNZIONE)
-exports.updateLessonOrder = async (req, res) => {
+export const updateLessonOrder = async (req, res) => {
   try {
     const { id } = req.params;
     const { newOrder } = req.body;
@@ -680,3 +680,18 @@ const generateSecureToken = (userId, lessonId) => {
     { expiresIn: '1h' }
   );
 };
+
+export default {
+    getAllLessons,
+    getLessonById,
+    createLesson,
+    updateLesson,
+    deleteLesson,
+    getLessons,
+    getLesson,
+    updateWatchProgress,
+    getLessonResources,
+    getVideoToken,
+    publishLesson,
+    updateLessonOrder,
+}

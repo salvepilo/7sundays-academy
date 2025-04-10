@@ -10,7 +10,7 @@ import nodemailer from 'nodemailer';
  * @route GET /api/email-config
  * @access Admin
  */
-exports.getAllEmailConfigs = async (req, res) => {
+export const getAllEmailConfigs = async (req, res) => {
   try {
     const configs = await EmailConfig.find().select('-auth.pass');
 
@@ -35,7 +35,7 @@ exports.getAllEmailConfigs = async (req, res) => {
  * @route GET /api/email-config/active
  * @access Admin
  */
-exports.getActiveEmailConfig = async (req, res) => {
+export const getActiveEmailConfig = async (req, res) => {
   try {
     const config = await EmailConfig.findOne({ isActive: true }).select('-auth.pass');
 
@@ -66,7 +66,7 @@ exports.getActiveEmailConfig = async (req, res) => {
  * @route GET /api/email-config/:id
  * @access Admin
  */
-exports.getEmailConfig = async (req, res) => {
+export const getEmailConfig = async (req, res) => {
   try {
     const config = await EmailConfig.findById(req.params.id).select('-auth.pass');
 
@@ -97,7 +97,7 @@ exports.getEmailConfig = async (req, res) => {
  * @route POST /api/email-config
  * @access Admin
  */
-exports.createEmailConfig = async (req, res) => {
+export const createEmailConfig = async (req, res) => {
   try {
     // Aggiungi l'utente corrente come creatore
     req.body.createdBy = req.user.id;
@@ -128,7 +128,7 @@ exports.createEmailConfig = async (req, res) => {
  * @route PATCH /api/email-config/:id
  * @access Admin
  */
-exports.updateEmailConfig = async (req, res) => {
+export const updateEmailConfig = async (req, res) => {
   try {
     // Aggiungi l'utente corrente come aggiornatore
     req.body.updatedBy = req.user.id;
@@ -169,7 +169,7 @@ exports.updateEmailConfig = async (req, res) => {
  * @route DELETE /api/email-config/:id
  * @access Admin
  */
-exports.deleteEmailConfig = async (req, res) => {
+export const deleteEmailConfig = async (req, res) => {
   try {
     const config = await EmailConfig.findById(req.params.id);
 
@@ -211,7 +211,7 @@ exports.deleteEmailConfig = async (req, res) => {
  * @route PATCH /api/email-config/:id/activate
  * @access Admin
  */
-exports.activateEmailConfig = async (req, res) => {
+export const activateEmailConfig = async (req, res) => {
   try {
     // Aggiorna l'utente che ha fatto la modifica
     const config = await EmailConfig.findByIdAndUpdate(
@@ -253,7 +253,7 @@ exports.activateEmailConfig = async (req, res) => {
  * @route POST /api/email-config/test
  * @access Admin
  */
-exports.testEmailConfig = async (req, res) => {
+export const testEmailConfig = async (req, res) => {
   try {
     const { host, port, secure, auth, testEmail } = req.body;
 
@@ -321,3 +321,14 @@ exports.testEmailConfig = async (req, res) => {
     });
   }
 };
+
+export default {
+  getAllEmailConfigs,
+  getActiveEmailConfig,
+  getEmailConfig,
+  createEmailConfig,
+  updateEmailConfig,
+  deleteEmailConfig,
+  activateEmailConfig,
+  testEmailConfig
+}

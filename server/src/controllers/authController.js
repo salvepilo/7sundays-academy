@@ -26,7 +26,7 @@ const createSendToken = (user, statusCode, res) => {
 };
 
 // Registrazione di un nuovo utente
-exports.signup = async (req, res, next) => {
+export const signup = async (req, res, next) => {
   try {
     const { name, email, password, passwordConfirm } = req.body;
 
@@ -62,7 +62,7 @@ exports.signup = async (req, res, next) => {
 
 
 // Login utente
-exports.login = async (req, res, next) => {
+export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -97,7 +97,7 @@ exports.login = async (req, res, next) => {
 };
 
 // Aggiornamento della password (quando l'utente è già autenticato)
-exports.updatePassword = async (req, res, next) => {
+export const updatePassword = async (req, res, next) => {
   try {
     // 1) Ottieni l'utente dalla collezione
     const user = await User.findById(req.user.id).select('+password');
@@ -127,7 +127,7 @@ exports.updatePassword = async (req, res, next) => {
 };
 
 // Richiesta di reset password
-exports.forgotPassword = async (req, res, next) => {
+export const forgotPassword = async (req, res, next) => {
   try {
     // 1) Trova l'utente con l'email fornita
     const user = await User.findOne({ email: req.body.email });
@@ -174,7 +174,7 @@ exports.forgotPassword = async (req, res, next) => {
 };
 
 // Reset della password
-exports.resetPassword = async (req, res, next) => {
+export const resetPassword = async (req, res, next) => {
   try {
     // 1) Ottieni l'utente in base al token
     const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
@@ -210,7 +210,7 @@ exports.resetPassword = async (req, res, next) => {
 };
 
 // Middleware per proteggere le route che richiedono autenticazione
-exports.protect = async (req, res, next) => {
+export const protect = async (req, res, next) => {
   try {
     // 1) Ottieni il token e verifica se esiste
     let token;
@@ -272,7 +272,7 @@ exports.protect = async (req, res, next) => {
 };
 
 // Middleware per limitare l'accesso in base al ruolo
-exports.restrictTo = (...roles) => {
+export const restrictTo = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
@@ -285,7 +285,7 @@ exports.restrictTo = (...roles) => {
 };
 
 // Ottieni i dati dell'utente corrente
-exports.getMe = async (req, res, next) => {
+export const getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
     
@@ -310,4 +310,15 @@ exports.getMe = async (req, res, next) => {
       message: 'Errore nel recupero del profilo. Riprova più tardi.',
     });
   }
+};
+
+export default {
+  signup,
+  login,
+  updatePassword,
+  forgotPassword,
+  resetPassword,
+  protect,
+  restrictTo,
+  getMe,
 };

@@ -4,7 +4,7 @@ import TestAttempt from '../models/TestAttempt.js';
 
 // FUNZIONI MANCANTI AGGIUNTE QUI
 // Crea un nuovo contatto di networking (solo per admin)
-exports.createContact = async (req, res) => {
+export const createContact = async (req, res) => {
   try {
     const newContact = await NetworkingContact.create(req.body);
     
@@ -24,7 +24,7 @@ exports.createContact = async (req, res) => {
 };
 
 // Aggiorna un contatto di networking (solo per admin)
-exports.updateContact = async (req, res) => {
+export const updateContact = async (req, res) => {
   try {
     const updatedContact = await NetworkingContact.findByIdAndUpdate(
       req.params.id,
@@ -58,7 +58,7 @@ exports.updateContact = async (req, res) => {
 };
 
 // Elimina un contatto di networking (solo per admin)
-exports.deleteContact = async (req, res) => {
+export const deleteContact = async (req, res) => {
   try {
     const contact = await NetworkingContact.findByIdAndDelete(req.params.id);
 
@@ -84,7 +84,7 @@ exports.deleteContact = async (req, res) => {
 // FINE DELLE FUNZIONI AGGIUNTE
 
 // Ottieni tutti i contatti di networking disponibili per l'utente
-exports.getContacts = async (req, res) => {
+export const getContacts = async (req, res) => {
   try {
     const userId = req.user.id;
     
@@ -117,7 +117,7 @@ exports.getContacts = async (req, res) => {
 };
 
 // Ottieni un singolo contatto di networking
-exports.getContactDetails = async (req, res) => {
+export const getContactDetails = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
@@ -168,7 +168,7 @@ exports.getContactDetails = async (req, res) => {
 };
 
 // Cerca contatti in base a criteri
-exports.searchContacts = async (req, res) => {
+export const searchContacts = async (req, res) => {
   try {
     const { query, category, skills, location } = req.body;
     const userId = req.user.id;
@@ -226,7 +226,7 @@ exports.searchContacts = async (req, res) => {
 };
 
 // Invia una richiesta di contatto
-exports.sendContactRequest = async (req, res) => {
+export const sendContactRequest = async (req, res) => {
   try {
     const { contactId, message } = req.body;
     const userId = req.user.id;
@@ -277,7 +277,7 @@ exports.sendContactRequest = async (req, res) => {
 // In un'implementazione reale, dovrebbero essere completate con logica appropriata
 
 // Accetta una richiesta di contatto
-exports.acceptContactRequest = async (req, res) => {
+export const acceptContactRequest = async (req, res) => {
   try {
     res.status(200).json({
       status: 'success',
@@ -293,7 +293,7 @@ exports.acceptContactRequest = async (req, res) => {
 };
 
 // Rifiuta una richiesta di contatto
-exports.rejectContactRequest = async (req, res) => {
+export const rejectContactRequest = async (req, res) => {
   try {
     res.status(200).json({
       status: 'success',
@@ -309,7 +309,7 @@ exports.rejectContactRequest = async (req, res) => {
 };
 
 // Ottieni le richieste di contatto pendenti
-exports.getPendingRequests = async (req, res) => {
+export const getPendingRequests = async (req, res) => {
   try {
     res.status(200).json({
       status: 'success',
@@ -328,7 +328,7 @@ exports.getPendingRequests = async (req, res) => {
 };
 
 // Ottieni i messaggi con un contatto
-exports.getMessages = async (req, res) => {
+export const getMessages = async (req, res) => {
   try {
     res.status(200).json({
       status: 'success',
@@ -347,7 +347,7 @@ exports.getMessages = async (req, res) => {
 };
 
 // Invia un messaggio a un contatto
-exports.sendMessage = async (req, res) => {
+export const sendMessage = async (req, res) => {
   try {
     res.status(200).json({
       status: 'success',
@@ -363,7 +363,7 @@ exports.sendMessage = async (req, res) => {
 };
 
 // Marca un messaggio come letto
-exports.markMessageAsRead = async (req, res) => {
+export const markMessageAsRead = async (req, res) => {
   try {
     res.status(200).json({
       status: 'success',
@@ -379,7 +379,7 @@ exports.markMessageAsRead = async (req, res) => {
 };
 
 // Elimina un messaggio
-exports.deleteMessage = async (req, res) => {
+export const deleteMessage = async (req, res) => {
   try {
     res.status(204).json({
       status: 'success',
@@ -395,7 +395,7 @@ exports.deleteMessage = async (req, res) => {
 };
 
 // Ottieni statistiche di networking per la dashboard admin
-exports.getNetworkingStats = async (req, res) => {
+export const getNetworkingStats = async (req, res) => {
   try {
     res.status(200).json({
       status: 'success',
@@ -417,7 +417,7 @@ exports.getNetworkingStats = async (req, res) => {
 };
 
 // Ottieni i requisiti per accedere ai contatti di networking
-exports.getNetworkingRequirements = async (req, res) => {
+export const getNetworkingRequirements = async (req, res) => {
   try {
     const userId = req.user.id;
     
@@ -496,4 +496,23 @@ exports.getNetworkingRequirements = async (req, res) => {
       message: 'Errore nel recupero dei requisiti',
     });
   }
+};
+
+export default {
+  createContact,
+  updateContact,
+  deleteContact,
+  getContacts,
+  getContactDetails,
+  searchContacts,
+  sendContactRequest,
+  acceptContactRequest,
+  rejectContactRequest,
+  getPendingRequests,
+  getMessages,
+  sendMessage,
+  markMessageAsRead,
+  deleteMessage,
+  getNetworkingStats,
+  getNetworkingRequirements,
 };

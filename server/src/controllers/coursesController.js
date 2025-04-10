@@ -4,7 +4,7 @@ import Lesson from '../models/Lesson.js';
 import Test from '../models/Test.js';
 import Enrollment from '../models/Enrollment.js';
 
-exports.getCourse = async (req, res) => {
+export const getCourse = async (req, res) => {
   try {
     const course = await Course.findById(req.params.id);
 
@@ -30,7 +30,7 @@ exports.getCourse = async (req, res) => {
   }
 };
 
-exports.getDashboardStats = async (req, res) => {
+export const getDashboardStats = async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
     const totalCourses = await Course.countDocuments();
@@ -75,7 +75,7 @@ exports.getDashboardStats = async (req, res) => {
   }
 };
 
-exports.updateCourse = async (req, res) => {
+export const updateCourse = async (req, res) => {
   try {
     const course = await Course.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -102,4 +102,10 @@ exports.updateCourse = async (req, res) => {
       message: 'Errore nell\'aggiornamento del corso',
     });
   }
+};
+
+export default {
+  getCourse,
+  getDashboardStats,
+  updateCourse,
 };

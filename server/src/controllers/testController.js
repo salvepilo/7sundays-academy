@@ -11,7 +11,7 @@ const openai = new OpenAI({
 });
 
 // Ottieni tutti i test (con filtri opzionali)
-exports.getAllTests = async (req, res) => {
+export const getAllTests = async (req, res) => {
   try {
     // Costruisci la query di filtro
     const queryObj = { ...req.query };
@@ -85,7 +85,7 @@ exports.getAllTests = async (req, res) => {
 };
 
 // Ottieni un singolo test per ID
-exports.getTest = async (req, res) => {
+export const getTest = async (req, res) => {
   try {
     const test = await Test.findById(req.params.id).populate('course', 'title');
 
@@ -146,7 +146,7 @@ exports.getTest = async (req, res) => {
 };
 
 // Crea un nuovo test (solo admin)
-exports.createTest = async (req, res) => {
+export const createTest = async (req, res) => {
   try {
     // Verifica se il corso esiste
     const course = await Course.findById(req.body.course);
@@ -175,7 +175,7 @@ exports.createTest = async (req, res) => {
 };
 
 // Aggiorna un test (solo admin)
-exports.updateTest = async (req, res) => {
+export const updateTest = async (req, res) => {
   try {
     const test = await Test.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -205,7 +205,7 @@ exports.updateTest = async (req, res) => {
 };
 
 // Elimina un test (solo admin)
-exports.deleteTest = async (req, res) => {
+export const deleteTest = async (req, res) => {
   try {
     const test = await Test.findByIdAndDelete(req.params.id);
 
@@ -233,7 +233,7 @@ exports.deleteTest = async (req, res) => {
 };
 
 // Inizia un tentativo di test (rinominata da startTest a startTestAttempt)
-exports.startTestAttempt = async (req, res) => {
+export const startTestAttempt = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
@@ -299,7 +299,7 @@ exports.startTestAttempt = async (req, res) => {
 };
 
 // Invia le risposte e valuta il test (rinominata da submitTest a submitTestAttempt)
-exports.submitTestAttempt = async (req, res) => {
+export const submitTestAttempt = async (req, res) => {
   try {
     const { id, attemptId } = req.params;
     const { answers, startedAt } = req.body;
@@ -450,7 +450,7 @@ exports.submitTestAttempt = async (req, res) => {
 };
 
 // Ottieni i tentativi di test dell'utente corrente (rinominata da getMyTestAttempts a getUserTestAttempts)
-exports.getUserTestAttempts = async (req, res) => {
+export const getUserTestAttempts = async (req, res) => {
   try {
     const userId = req.user.id;
 
@@ -476,7 +476,7 @@ exports.getUserTestAttempts = async (req, res) => {
 };
 
 // Ottieni un singolo tentativo di test (rinominata da getTestAttempt a getTestAttemptDetails)
-exports.getTestAttemptDetails = async (req, res) => {
+export const getTestAttemptDetails = async (req, res) => {
   try {
     const { attemptId } = req.params;
 
@@ -515,7 +515,7 @@ exports.getTestAttemptDetails = async (req, res) => {
 };
 
 // Pubblica o nascondi un test (solo admin) - FUNZIONE MANCANTE
-exports.publishTest = async (req, res) => {
+export const publishTest = async (req, res) => {
   try {
     const { id } = req.params;
     const { isPublished } = req.body;
@@ -561,9 +561,8 @@ exports.publishTest = async (req, res) => {
 };
 
 // Ottieni statistiche dei test per la dashboard admin - FUNZIONE MANCANTE
-
-exports.getTestStats = async (req, res) => {
-  try {
+export const getTestStats = async (req, res) => {
+  try {    
     // Statistiche generali dei test
     const totalTests = await Test.countDocuments();
     const publishedTests = await Test.countDocuments({ isPublished: true });
@@ -705,4 +704,17 @@ const generateFeedback = async (question, answer, score) => {
   }
 };
 
-export default testController;
+export default {
+  getAllTests,
+  getTest,
+  createTest,
+  updateTest,
+  deleteTest,
+  startTestAttempt,
+  submitTestAttempt,
+  getUserTestAttempts,
+  getTestAttemptDetails,
+  publishTest,
+  getTestStats
+};
+
