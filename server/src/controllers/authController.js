@@ -9,6 +9,7 @@ const signToken = (id) => {
   });
 };
 
+module.exports = exports;
 // Funzione per creare e inviare il token nella risposta
 const createSendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
