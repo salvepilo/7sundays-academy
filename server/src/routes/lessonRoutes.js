@@ -1,13 +1,17 @@
 import express from 'express';
 import { getAllLessons, getLessonById, createLesson, updateLesson, deleteLesson } from '../controllers/lessonController.js';
 import { createNote, getNotes, deleteNote } from '../controllers/noteController.js';
-import { protect, restrictTo } from '../controllers/authController.js';
+import { protect, restrictTo} from '../controllers/authController.js';
 import { createQuestion, getQuestions, createAnswer, deleteQuestion, deleteAnswer } from '../controllers/questionController.js';
+import * as lessonController from '../controllers/lessonController.js';
+import * as noteController from '../controllers/noteController.js';
+import * as questionController from '../controllers/questionController.js';
+import * as authController from '../controllers/authController.js';
   
 const router = express.Router();
 
 // Protezione di tutte le routes successive
-router.use(authController.protect);
+router.use(protect);
 
 // GET all lessons
 router.get('/', lessonController.getAllLessons);

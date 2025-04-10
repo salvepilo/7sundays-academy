@@ -1,6 +1,7 @@
-const mongoose = require('mongoose');
-const User = require('./User');
-const TestAttempt = require('./TestAttempt');
+import mongoose from 'mongoose';
+import validator from 'validator';
+
+import * as User from './User.js';
 
 const networkingContactSchema = new mongoose.Schema(
   {
@@ -188,4 +189,4 @@ networkingContactSchema.pre(/^find/, function(next) {
 
 const NetworkingContact = mongoose.model('NetworkingContact', networkingContactSchema);
 
-module.exports = NetworkingContact;
+export default NetworkingContact;

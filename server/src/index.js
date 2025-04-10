@@ -10,10 +10,10 @@ import rateLimit from 'express-rate-limit';
 import path from 'path';
 
 // Import controllers
-import authController from './controllers/authController.js';
-import userController from './controllers/userController.js';
-import coursesController from './controllers/coursesController.js';
-import testController from './controllers/testController.js';
+import * as authController from './controllers/authController.js';
+import * as userController from './controllers/userController.js';
+import * as coursesController from './controllers/coursesController.js';
+import * as testController from './controllers/testController.js';
 
 // Import routes
 import authRoutes from "./routes/authRoutes.js";

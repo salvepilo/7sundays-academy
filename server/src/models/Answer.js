@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const answerSchema = new mongoose.Schema(
   {
@@ -87,4 +87,4 @@ answerSchema.pre('save', async function(next) {
 
 const Answer = mongoose.model('Answer', answerSchema);
 
-module.exports = Answer;
+export default Answer;

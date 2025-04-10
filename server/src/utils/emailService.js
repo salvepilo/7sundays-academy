@@ -2,8 +2,8 @@
  * Servizio per l'invio di email
  * Utilizza nodemailer e le configurazioni dal database
  */
-const nodemailer = require('nodemailer');
-const EmailConfig = require('../models/EmailConfig');
+import nodemailer from 'nodemailer';
+import EmailConfig from '../models/EmailConfig.js';
 
 // Cache per il transporter
 let cachedTransporter = null;
@@ -271,10 +271,11 @@ async function sendTestResultEmail(user, test, score, passed) {
   });
 }
 
-module.exports = {
+export {
   sendEmail,
   sendWelcomeEmail,
   sendPasswordResetEmail,
   sendCourseCompletionEmail,
-  sendTestResultEmail
+  sendTestResultEmail,
+  getTransporter
 };

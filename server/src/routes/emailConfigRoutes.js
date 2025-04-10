@@ -30,5 +30,3 @@ router.route('/:id')
   .delete(deleteEmailConfig);
 
 export default router;
-
-module.exports = router;

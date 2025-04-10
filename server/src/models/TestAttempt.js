@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const testAttemptSchema = new mongoose.Schema(
   {
@@ -94,6 +94,6 @@ testAttemptSchema.statics.countUserAttempts = async function(userId, testId) {
   return await this.countDocuments({ user: userId, test: testId });
 };
 
-const TestAttempt = mongoose.model('TestAttempt', testAttemptSchema);
+const TestAttempt = mongoose.model('TestAttempt', testAttemptSchema); 
 
-module.exports = TestAttempt;
+export default TestAttempt;
