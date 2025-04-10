@@ -1,4 +1,5 @@
-import { useState, type ComponentType } from 'react';
+tsx
+import { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -14,16 +15,11 @@ type FormData = {
   password: string;
 };
 
-
-
-const Login: ComponentType = () => {
-
-
-
+const LoginComponent = () => {
   const { login, error, loading } = useAuth();
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
 
   const onSubmit = async (data: FormData) => {
@@ -77,7 +73,7 @@ const Login: ComponentType = () => {
                   autoComplete="email"
                   className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${errors.email ? 'border-red-300' : 'border-gray-300'} placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm`}
                   placeholder="Indirizzo Email"
-                  {...register('email', { 
+                  {...register('email', {
                     required: 'L\'email è obbligatoria',
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
@@ -162,4 +158,4 @@ const Login: ComponentType = () => {
   );
 };
 
-export default dynamic(() => Promise.resolve(Login), { ssr: false });
+export { LoginComponent };
