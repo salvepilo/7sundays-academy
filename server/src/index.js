@@ -146,14 +146,14 @@ connectWithRetry();
 // Routes
 // =========================================================
 
-/* app.use('/api/', apiLimiter);
+app.use('/api/', apiLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/lessons', lessonRoutes);
-app.use('/api/tests', testRoutes); */
-//app.use('/api/networking', networkingRoutes);
-/* app.use('/api', emailConfigRoutes); */
+app.use('/api/tests', testRoutes);
+app.use('/api/networking', networkingRoutes);
+app.use('/api', emailConfigRoutes);
 // =========================================================
 // Public Routes
 // =========================================================
