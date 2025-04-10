@@ -1,4 +1,8 @@
 const Course = require('../models/Course');
+const User = require('../models/User');
+const Lesson = require('../models/Lesson');
+const Test = require('../models/Test');
+const Enrollment = require('../models/Enrollment');
 
 exports.getCourse = async (req, res) => {
   try {
@@ -22,6 +26,54 @@ exports.getCourse = async (req, res) => {
     res.status(500).json({
       status: 'error',
       message: 'Errore nel recupero del corso',
+    });
+  }
+};
+
+exports.getDashboardStats = async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const activeUsers = await User.countDocuments({ active: true }); 
+    const totalCourses = await Course.countDocuments();
+    const totalLessons = await Lesson.countDocuments();
+    const totalTests = await Test.countDocuments();
+    const totalEnrollments = await Enrollment.countDocuments();
+
+    // Calcolo del tasso di completamento (semplificato)
+    const completedEnrollments = await Enrollment.countDocuments({ completed: true });
+    const completionRate = totalEnrollments > 0 ? (completedEnrollments / totalEnrollments) * 100 : 0;
+
+    // Calcolo del punteggio medio dei test (semplificato)
+    const testScores = await Test.aggregate([
+      {
+        $group: {
+          _id: null,
+          averageScore: { $avg: "$score" }
+        }
+      }
+    ]);
+    const averageTestScore = testScores.length > 0 ? testScores[0].averageScore : 0;
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        stats: {
+          totalUsers,
+          activeUsers,
+          totalCourses,
+          totalLessons,
+          totalTests,
+          totalEnrollments,
+          completionRate: completionRate.toFixed(2),
+          averageTestScore: averageTestScore.toFixed(2),
+        },
+      },
+    });
+  } catch (err) {
+    console.error('Errore nel recupero delle statistiche della dashboard:', err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Errore nel recupero delle statistiche della dashboard',
     });
   }
 };
