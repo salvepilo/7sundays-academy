@@ -3,7 +3,7 @@ const router = express.Router();
 const authController = require('../controllers/authController');
 
 // /api/courses/stats/dashboard
-router.get('/stats/dashboard', authController.protect, (req, res) => {
+router.get('/stats/dashboard', authController.protect, authController.restrictTo('admin'), (req, res) => {
   res.status(200).json({
     status: 'success',
     data: {
@@ -22,7 +22,7 @@ router.get('/stats/dashboard', authController.protect, (req, res) => {
 });
 
 // /api/courses
-router.get('/', authController.protect, (req, res) => {
+router.get('/', authController.protect, authController.restrictTo('admin'), (req, res) => {
   res.status(200).json({
     status: 'success',
     data: {

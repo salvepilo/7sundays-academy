@@ -178,14 +178,10 @@ exports.protect = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
       console.log('Token received:', token);
     }
-
     if (!token) {
       return res.status(401).json({
         status: 'fail',
         message: 'Non sei autenticato. Effettua il login per accedere.',
-      });
-    } else{
-        console.log('Token received:', token);
       });
     }
 
@@ -199,7 +195,6 @@ exports.protect = async (req, res, next) => {
       return res.status(401).json({
         status: 'fail',
         message: "L'utente a cui appartiene questo token non esiste più.",
-        console.log('Current User:', currentUser);
       });
     }
 

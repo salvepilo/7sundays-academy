@@ -1,9 +1,9 @@
 const express = require('express');
+const router = express.Router();
 const authController = require('../controllers/authController');
 
-const router = express.Router();
-
-router.get('/api/users', authController.protect, (req, res) => {
+router.get('/', authController.protect, authController.restrictTo('admin'), (req, res) => {
+  console.log("users route")
   res.status(200).json({
     status: 'success',
     data: {

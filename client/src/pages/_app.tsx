@@ -1,6 +1,7 @@
 import '@/styles/globals.css';
 import type { AppProps } from 'next/app';
 import 'react-toastify/dist/ReactToastify.css';
+import { ThemeProvider } from '@mui/material/styles';
 import { AuthProvider } from '@/contexts/AuthContext';
 import dynamic from 'next/dynamic';
 const ToastProvider = dynamic(() => import('@/components/layout/ToastProvider'), { ssr: false });
@@ -54,9 +55,11 @@ export default function App({ Component, pageProps }: AppProps) {
   }, [router.pathname]);
 
   return (
-    <AuthProvider>
-      <Component {...pageProps} />
-      <ToastProvider />
-    </AuthProvider>
+    <ThemeProvider>
+        <AuthProvider>
+            <Component {...pageProps} />
+            <ToastProvider />
+        </AuthProvider>
+    </ThemeProvider>
   );
 }
