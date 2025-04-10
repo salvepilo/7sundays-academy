@@ -27,16 +27,16 @@ export default function Home() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Reindirizza gli utenti già autenticati alla dashboard
-  useEffect(() => {
-    if (isAuthenticated) {
-      if (user?.role === 'admin') {
-        router.push('/admin/dashboard');
-      } else {
-        router.push('/dashboard');
-      }
-    }
-  }, [isAuthenticated, router, user]);
+  // // Reindirizza gli utenti già autenticati alla dashboard
+  // useEffect(() => {
+  //   if (isAuthenticated) {
+  //     if (user?.role === 'admin') {
+  //       router.push('/admin/dashboard');
+  //     } else {
+  //       router.push('/dashboard');
+  //     }
+  //   }
+  // }, [isAuthenticated, router, user]);
 
   return (
     <div className="min-h-screen flex flex-col">
