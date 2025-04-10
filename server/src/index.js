@@ -152,15 +152,16 @@ const emailConfigRoutes = require('./routes/emailConfigRoutes');
 
 // ------ DEFINIZIONE DIRETTA DELLE ROUTE DI AUTENTICAZIONE ------
 // Route di autenticazione
-app.post('/api/auth/register', authController.register);
+app.post('/api/auth/register', authController.signup); // Cambiato da register a signup
 app.post('/api/auth/login', authController.login);
 
 // Versione senza /api per retrocompatibilità
-app.post('/auth/register', authController.register);
+app.post('/auth/register', authController.signup); // Cambiato da register a signup
 app.post('/auth/login', authController.login);
 
-//Applica il middleware di autenticazione a tutte le routes
-app.use(authController.protect);
+// Applica il middleware di autenticazione a tutte le routes protette
+app.use('/api/auth/me', authController.protect);
+app.use('/auth/me', authController.protect);
 app.get('/api/auth/me', authController.getMe);
 app.get('/auth/me', authController.getMe);
 
@@ -168,7 +169,22 @@ try {
   // Applica rate limiter alle route API
   app.use('/api/', apiLimiter);
 
-  //Mount delle route con prefisso /api
+  // Applica il middleware di protezione solo alle route che lo richiedono
+  app.use('/api/users', authController.protect);
+  app.use('/api/courses', authController.protect);
+  app.use('/api/lessons', authController.protect);
+  app.use('/api/tests', authController.protect);
+  app.use('/api/networking', authController.protect);
+  app.use('/api/email-config', authController.protect);
+  
+  app.use('/users', authController.protect);
+  app.use('/courses', authController.protect);
+  app.use('/lessons', authController.protect);
+  app.use('/tests', authController.protect);
+  app.use('/networking', authController.protect);
+  app.use('/email-config', authController.protect);
+
+  // Mount delle route con prefisso /api
   app.use('/api/auth', authRoutes);
   app.use('/api/courses', courseRoutes);
   app.use('/api/users', userRoutes);
@@ -180,14 +196,16 @@ try {
   // Versione senza /api per retrocompatibilità
   app.use('/auth', authRoutes);
   app.use('/courses', courseRoutes);
+  app.use('/users', userRoutes);
   app.use('/lessons', lessonRoutes);
   app.use('/tests', testRoutes);
   app.use('/networking', networkingRoutes);
   app.use('/email-config', emailConfigRoutes);
 
 } catch(error){
-  console.error(error)
+  console.error('Errore durante la configurazione delle routes:', error);
 }
+
 // =========================================================
 // ROUTE PUBBLICHE
 // =========================================================

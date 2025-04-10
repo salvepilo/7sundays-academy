@@ -1,7 +1,15 @@
-const User = require('../models/User')
-
+const User = require('../models/User');
 const Course = require('../models/Course');
 const TestAttempt = require('../models/TestAttempt');
+
+// Funzione di supporto per filtrare gli oggetti
+const filterObj = (obj, ...allowedFields) => {
+  const newObj = {};
+  Object.keys(obj).forEach((el) => {
+    if (allowedFields.includes(el)) newObj[el] = obj[el];
+  });
+  return newObj;
+};
 
 // Ottieni tutti gli utenti (solo per admin)
 exports.getAllUsers = async (req, res) => {
@@ -10,8 +18,8 @@ exports.getAllUsers = async (req, res) => {
 
     res.status(200).json({
       status: 'success',
-      results:users.length,
-      data:{
+      results: users.length,
+      data: {
         users
       },
     });
@@ -20,6 +28,35 @@ exports.getAllUsers = async (req, res) => {
     res.status(500).json({
       status: 'error',
       message: 'Errore nel recupero degli utenti',
+    });
+  }
+};
+
+// Crea un nuovo utente (solo per admin)
+exports.createUser = async (req, res) => {
+  try {
+    const newUser = await User.create({
+      name: req.body.name,
+      email: req.body.email,
+      password: req.body.password,
+      passwordConfirm: req.body.passwordConfirm,
+      role: req.body.role || 'user'
+    });
+
+    // Rimuovi la password dalla risposta
+    newUser.password = undefined;
+
+    res.status(201).json({
+      status: 'success',
+      data: {
+        user: newUser
+      }
+    });
+  } catch (error) {
+    console.error('Errore nella creazione dell\'utente:', error);
+    res.status(400).json({
+      status: 'fail',
+      message: error.message
     });
   }
 };
@@ -33,8 +70,8 @@ exports.getUser = async (req, res) => {
       return res.status(404).json({
         status: 'fail',
         message: 'Utente non trovato'
-      })
-  }
+      });
+    }
 
     res.status(200).json({
       status: 'success',
@@ -51,11 +88,57 @@ exports.getUser = async (req, res) => {
   }
 };
 
+// Aggiorna un utente esistente (solo per admin)
+exports.updateUser = async (req, res) => {
+  try {
+    // Non permettere l'aggiornamento della password con questa route
+    if (req.body.password || req.body.passwordConfirm) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Questa route non è per l\'aggiornamento della password.'
+      });
+    }
+
+    // Filtra i campi non consentiti
+    const filteredBody = filterObj(req.body, 'name', 'email', 'role', 'active');
+
+    // Aggiorna l'utente
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.id,
+      filteredBody,
+      {
+        new: true,
+        runValidators: true
+      }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Utente non trovato'
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        user: updatedUser,
+      },
+    });
+  } catch (error) {
+    console.error('Errore nell\'aggiornamento dell\'utente:', error);
+    res.status(400).json({
+      status: 'fail',
+      message: error.message
+    });
+  }
+};
+
 // Aggiorna i dati dell'utente corrente
 exports.updateMe = async (req, res) => {
   try {
     // Verifica che non si stia tentando di cambiare la password
-    if (req.body.password) {
+    if (req.body.password || req.body.passwordConfirm) {
       return res.status(400).json({
         status: 'fail',
         message: 'Questa route non è per l\'aggiornamento della password. Usa /updatePassword.'
@@ -69,7 +152,7 @@ exports.updateMe = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
       new: true,
       runValidators: true,
-    })
+    });
 
     res.status(200).json({
       status: 'success',
@@ -109,18 +192,27 @@ exports.getMyProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
 
+    if (!user) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Utente non trovato'
+      });
+    }
+
     // Ottieni i corsi iscritti con dettagli
     const enrolledCourses = await Promise.all(
       user.enrolledCourses.map(async (enrollment) => {
         const course = await Course.findById(enrollment.courseId);
+        if (!course) return null;
+        
         return {
-          ...course.toObject(), 
+          ...course.toObject(),
           progress: enrollment.progress,
           enrolledAt: enrollment.enrolledAt,
           lastWatched: enrollment.lastWatched
-        }
+        };
       })
-    )
+    ).then(courses => courses.filter(Boolean)); // Filtra eventuali corsi null
 
     // Ottieni i punteggi dei test
     const testScores = [];
@@ -129,7 +221,7 @@ exports.getMyProfile = async (req, res) => {
         user: user._id,
         test: testId,
         percentageScore: score,
-      }).populate('test', 'title')
+      }).populate('test', 'title');
 
       if (testAttempt && testAttempt.test) {
         testScores.push({
@@ -137,7 +229,7 @@ exports.getMyProfile = async (req, res) => {
           title: testAttempt.test.title,
           score,
           completedAt: testAttempt.completedAt
-        })
+        });
       }
     }
 
@@ -174,12 +266,4 @@ exports.getMyProfile = async (req, res) => {
   }
 };
 
-// Funzione di supporto per filtrare gli oggetti
-const filterObj = (obj, ...allowedFields) => {
-  const newObj = {};
-  Object.keys(obj).forEach((el) => {
-    if (allowedFields.includes(el)) newObj[el] = obj[el];
-  });
-  return newObj;
-};
 module.exports = exports;

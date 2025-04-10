@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const User = require('../models/User');
 const { sendPasswordResetEmail } = require('../utils/emailService');
 
@@ -24,9 +25,9 @@ const createSendToken = (user, statusCode, res) => {
 };
 
 // Registrazione di un nuovo utente
-exports.register = async (req, res, next) => {
+exports.signup = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, passwordConfirm } = req.body;
 
     // Verifica se l'utente esiste già
     const existingUser = await User.findOne({ email });
@@ -42,6 +43,7 @@ exports.register = async (req, res, next) => {
       name,
       email,
       password,
+      passwordConfirm,
       role: 'user', // Default role
     });
 
@@ -87,6 +89,36 @@ exports.login = async (req, res, next) => {
     res.status(500).json({
       status: 'error',
       message: 'Errore durante il login. Riprova più tardi.',
+    });
+  }
+};
+
+// Aggiornamento della password (quando l'utente è già autenticato)
+exports.updatePassword = async (req, res, next) => {
+  try {
+    // 1) Ottieni l'utente dalla collezione
+    const user = await User.findById(req.user.id).select('+password');
+    
+    // 2) Verifica se la password corrente è corretta
+    if (!(await user.correctPassword(req.body.currentPassword, user.password))) {
+      return res.status(401).json({
+        status: 'fail',
+        message: 'La password corrente non è corretta',
+      });
+    }
+    
+    // 3) Aggiorna la password
+    user.password = req.body.password;
+    user.passwordConfirm = req.body.passwordConfirm;
+    await user.save();
+    
+    // 4) Effettua il login con la nuova password
+    createSendToken(user, 200, res);
+  } catch (err) {
+    console.error('Errore durante l\'aggiornamento della password:', err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Errore durante l\'aggiornamento della password. Riprova più tardi.',
     });
   }
 };
@@ -142,11 +174,19 @@ exports.forgotPassword = async (req, res, next) => {
 exports.resetPassword = async (req, res, next) => {
   try {
     // 1) Ottieni l'utente in base al token
-    const hashedToken = require('crypto').createHash('sha256').update(req.params.token).digest('hex');
-    const user = await User.findOne({ passwordResetToken: hashedToken, passwordResetExpires: { $gt: Date.now() } });
+    const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+    const user = await User.findOne({ 
+      passwordResetToken: hashedToken, 
+      passwordResetExpires: { $gt: Date.now() } 
+    });
 
     // 2) Se il token è scaduto o non valido
-    if (!user) return res.status(400).json({ status: 'fail', message: 'Token non valido o scaduto.' });
+    if (!user) {
+      return res.status(400).json({ 
+        status: 'fail', 
+        message: 'Token non valido o scaduto.' 
+      });
+    }
 
     // 3) Aggiorna la password
     user.password = req.body.password;
@@ -196,7 +236,15 @@ exports.protect = async (req, res, next) => {
       });
     }
 
-    // 4) Imposta l'utente nella richiesta
+    // 4) Verifica se l'utente ha cambiato la password dopo l'emissione del token
+    if (currentUser.changedPasswordAfter && currentUser.changedPasswordAfter(decoded.iat)) {
+      return res.status(401).json({
+        status: 'fail',
+        message: 'La password è stata modificata di recente. Effettua nuovamente il login.',
+      });
+    }
+
+    // 5) Imposta l'utente nella richiesta
     req.user = currentUser;
     next();
   } catch (err) {
@@ -213,7 +261,6 @@ exports.protect = async (req, res, next) => {
       });
     }
     console.error('JWT Verification Error:', err);
-    console.error('Errore di autenticazione:', err);
     res.status(500).json({
       status: 'error',
       message: 'Errore durante l\'autenticazione. Riprova più tardi.',
@@ -224,7 +271,6 @@ exports.protect = async (req, res, next) => {
 // Middleware per limitare l'accesso in base al ruolo
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
-    console.log('User role:', req.user.role);
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
         status: 'fail',
@@ -237,18 +283,28 @@ exports.restrictTo = (...roles) => {
 
 // Ottieni i dati dell'utente corrente
 exports.getMe = async (req, res, next) => {
-  const user = await User.findById(req.user.id);
-  console.log('User role before update:', user.role);
-  if(user.role !== 'admin'){
-      user.role = 'admin';
-      await user.save();
+  try {
+    const user = await User.findById(req.user.id);
+    
+    if (!user) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Utente non trovato',
+      });
+    }
+    
+    res.setHeader('Cache-Control', 'no-store');
+    res.status(200).json({
+      status: 'success',
+      data: {
+        user
+      },
+    });
+  } catch (err) {
+    console.error('Errore nel recupero del profilo:', err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Errore nel recupero del profilo. Riprova più tardi.',
+    });
   }
-  console.log('User role after update:', user.role);
-  res.setHeader('Cache-Control', 'no-store');
-  res.status(200).json({
-    status: 'success',
-    data: req.user,
-  });
 };
-
-

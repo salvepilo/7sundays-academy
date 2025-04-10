@@ -62,7 +62,7 @@ export default function AdminDashboard() {
         setIsLoading(true);
         setError(null);
         const token = localStorage.getItem('token');
-        console.log(token)
+        console.log(token);
         
         // Ottieni le statistiche generali
         const statsResponse = await axios.get('/api/courses/stats/dashboard', {
@@ -195,8 +195,10 @@ export default function AdminDashboard() {
                   </div>
                   <div className="bg-gray-50 px-5 py-3">
                     <div className="text-sm">
-                      <Link href="/admin/users" className="font-medium text-primary-600 hover:text-primary-500">
-                        Visualizza tutti gli utenti
+                      <Link href="/admin/users">
+                        <span className="font-medium text-primary-600 hover:text-primary-500">
+                          Visualizza tutti gli utenti
+                        </span>
                       </Link>
                     </div>
                   </div>
@@ -223,8 +225,10 @@ export default function AdminDashboard() {
                   </div>
                   <div className="bg-gray-50 px-5 py-3">
                     <div className="text-sm">
-                      <Link href="/admin/courses" className="font-medium text-primary-600 hover:text-primary-500">
-                        Gestisci corsi
+                      <Link href="/admin/courses">
+                        <span className="font-medium text-primary-600 hover:text-primary-500">
+                          Gestisci corsi
+                        </span>
                       </Link>
                     </div>
                   </div>
@@ -251,8 +255,10 @@ export default function AdminDashboard() {
                   </div>
                   <div className="bg-gray-50 px-5 py-3">
                     <div className="text-sm">
-                      <Link href="/admin/enrollments" className="font-medium text-primary-600 hover:text-primary-500">
-                        Visualizza iscrizioni
+                      <Link href="/admin/enrollments">
+                        <span className="font-medium text-primary-600 hover:text-primary-500">
+                          Visualizza iscrizioni
+                        </span>
                       </Link>
                     </div>
                   </div>
@@ -279,8 +285,10 @@ export default function AdminDashboard() {
                   </div>
                   <div className="bg-gray-50 px-5 py-3">
                     <div className="text-sm">
-                      <Link href="/admin/reports" className="font-medium text-primary-600 hover:text-primary-500">
-                        Visualizza report
+                      <Link href="/admin/reports">
+                        <span className="font-medium text-primary-600 hover:text-primary-500">
+                          Visualizza report
+                        </span>
                       </Link>
                     </div>
                   </div>
@@ -334,11 +342,15 @@ export default function AdminDashboard() {
                                   </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  <Link href={`/admin/courses/${course._id}`} className="text-primary-600 hover:text-primary-900 mr-3">
-                                    Visualizza
+                                  <Link href={`/admin/courses/${course._id}`}>
+                                    <span className="text-primary-600 hover:text-primary-900 mr-3">
+                                      Visualizza
+                                    </span>
                                   </Link>
-                                  <Link href={`/admin/courses/${course._id}/edit`} className="text-primary-600 hover:text-primary-900">
-                                    Modifica
+                                  <Link href={`/admin/courses/${course._id}/edit`}>
+                                    <span className="text-primary-600 hover:text-primary-900">
+                                      Modifica
+                                    </span>
                                   </Link>
                                 </td>
                               </tr>
@@ -400,11 +412,15 @@ export default function AdminDashboard() {
                                   {user.enrolledCourses}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  <Link href={`/admin/users/${user._id}`} className="text-primary-600 hover:text-primary-900 mr-3">
-                                    Visualizza
+                                  <Link href={`/admin/users/${user._id}`}>
+                                    <span className="text-primary-600 hover:text-primary-900 mr-3">
+                                      Visualizza
+                                    </span>
                                   </Link>
-                                  <Link href={`/admin/users/${user._id}/edit`} className="text-primary-600 hover:text-primary-900">
-                                    Modifica
+                                  <Link href={`/admin/users/${user._id}/edit`}>
+                                    <span className="text-primary-600 hover:text-primary-900">
+                                      Modifica
+                                    </span>
                                   </Link>
                                 </td>
                               </tr>
@@ -446,8 +462,10 @@ export default function AdminDashboard() {
               </div>
               <div className="bg-gray-50 px-5 py-3">
                 <div className="text-sm">
-                  <Link href="/admin/courses/new" className="font-medium text-primary-600 hover:text-primary-500">
-                    Crea corso
+                  <Link href="/admin/courses/new">
+                    <span className="font-medium text-primary-600 hover:text-primary-500">
+                      Crea corso
+                    </span>
                   </Link>
                 </div>
               </div>
@@ -472,8 +490,10 @@ export default function AdminDashboard() {
               </div>
               <div className="bg-gray-50 px-5 py-3">
                 <div className="text-sm">
-                  <Link href="/admin/tests/new" className="font-medium text-primary-600 hover:text-primary-500">
-                    Crea test
+                  <Link href="/admin/tests/new">
+                    <span className="font-medium text-primary-600 hover:text-primary-500">
+                      Crea test
+                    </span>
                   </Link>
                 </div>
               </div>
@@ -497,8 +517,10 @@ export default function AdminDashboard() {
               </div>
               <div className="bg-gray-50 px-5 py-3">
                 <div className="text-sm">
-                  <Link href="/admin/reports" className="font-medium text-primary-600 hover:text-primary-500">
-                    Visualizza report
+                  <Link href="/admin/reports">
+                    <span className="font-medium text-primary-600 hover:text-primary-500">
+                      Visualizza report
+                    </span>
                   </Link>
                 </div>
               </div>
