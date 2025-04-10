@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import User from '../models/User.js';
-import { sendPasswordResetEmail } from '../utils/emailService.js';
+import * as User from '../models/User.js';
+import * as emailService from '../utils/emailService.js';
 
 
 // Funzione per generare il token JWT
@@ -148,7 +148,7 @@ export const forgotPassword = async (req, res, next) => {
     )}/resetPassword/${resetToken}`;
 
     try {
-      await sendPasswordResetEmail(user, resetToken, resetUrl);
+      await emailService.sendPasswordResetEmail(user, resetToken, resetUrl);
       res.status(200).json({
         status: 'success',
         message: 'Email di reset password inviata!',

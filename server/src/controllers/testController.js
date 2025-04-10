@@ -1,13 +1,12 @@
-import Test from '../models/Test.js';
-import TestAttempt from '../models/TestAttempt.js';
-import User from '../models/User.js';
-import Course from '../models/Course.js';
+import * as Test from '../models/Test.js';
+import * as TestAttempt from '../models/TestAttempt.js';
+import * as User from '../models/User.js';
+import * as Course from '../models/Course.js';
 import { OpenAI } from 'openai';
-import testController from './testController.js';
+
 // Inizializza il client OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-
 });
 
 // Ottieni tutti i test (con filtri opzionali)
@@ -124,7 +123,7 @@ export const getTest = async (req, res) => {
       // Se l'utente non è admin, rimuovi le risposte corrette
       if (req.user.role !== 'admin' && !test.showCorrectAnswers) {
         testWithAttempts.questions = testWithAttempts.questions.map(q => {
-          const { correctAnswer, ...questionWithoutAnswer } = q;
+          const { correctAnswer, aiEvaluationCriteria, ...questionWithoutAnswer } = q;
           return questionWithoutAnswer;
         });
       }
@@ -232,7 +231,7 @@ export const deleteTest = async (req, res) => {
   }
 };
 
-// Inizia un tentativo di test (rinominata da startTest a startTestAttempt)
+// Inizia un tentativo di test
 export const startTestAttempt = async (req, res) => {
   try {
     const { id } = req.params;
@@ -298,7 +297,7 @@ export const startTestAttempt = async (req, res) => {
   }
 };
 
-// Invia le risposte e valuta il test (rinominata da submitTest a submitTestAttempt)
+// Invia le risposte e valuta il test
 export const submitTestAttempt = async (req, res) => {
   try {
     const { id, attemptId } = req.params;
@@ -449,7 +448,7 @@ export const submitTestAttempt = async (req, res) => {
   }
 };
 
-// Ottieni i tentativi di test dell'utente corrente (rinominata da getMyTestAttempts a getUserTestAttempts)
+// Ottieni i tentativi di test dell'utente corrente
 export const getUserTestAttempts = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -475,7 +474,7 @@ export const getUserTestAttempts = async (req, res) => {
   }
 };
 
-// Ottieni un singolo tentativo di test (rinominata da getTestAttempt a getTestAttemptDetails)
+// Ottieni un singolo tentativo di test
 export const getTestAttemptDetails = async (req, res) => {
   try {
     const { attemptId } = req.params;
@@ -514,7 +513,7 @@ export const getTestAttemptDetails = async (req, res) => {
   }
 };
 
-// Pubblica o nascondi un test (solo admin) - FUNZIONE MANCANTE
+// Pubblica o nascondi un test (solo admin)
 export const publishTest = async (req, res) => {
   try {
     const { id } = req.params;
@@ -560,7 +559,7 @@ export const publishTest = async (req, res) => {
   }
 };
 
-// Ottieni statistiche dei test per la dashboard admin - FUNZIONE MANCANTE
+// Ottieni statistiche dei test per la dashboard admin
 export const getTestStats = async (req, res) => {
   try {    
     // Statistiche generali dei test
@@ -703,17 +702,3 @@ const generateFeedback = async (question, answer, score) => {
     return 'Impossibile generare un feedback dettagliato. Rivedi la tua risposta e confrontala con il materiale del corso.';
   }
 };
-
-
-export { getAllTests };
-export { getTest };
-export { createTest };
-export { updateTest };
-export { deleteTest };
-export { startTestAttempt };
-export { submitTestAttempt };
-export { getUserTestAttempts };
-export { getTestAttemptDetails };
-export { publishTest };
-export { getTestStats };
-

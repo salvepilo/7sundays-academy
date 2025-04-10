@@ -1,6 +1,6 @@
-import NetworkingContact from '../models/NetworkingContact.js';
-import User from '../models/User.js';
-import TestAttempt from '../models/TestAttempt.js';
+import * as NetworkingContact from '../models/NetworkingContact.js';
+import * as User from '../models/User.js';
+import * as TestAttempt from '../models/TestAttempt.js';
 
 // FUNZIONI MANCANTI AGGIUNTE QUI
 // Crea un nuovo contatto di networking (solo per admin)

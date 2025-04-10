@@ -1,11 +1,6 @@
-// Importa dotenv e carica le variabili d'ambiente dal file .env
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Caricamento variabili d'ambiente // REMOVED because now is imported in the top
-//require("dotenv").config();
-
-// Importazione dipendenze
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
@@ -14,138 +9,13 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
 
-// Inizializzazione dell'app Express
-const app = express();
-const PORT = process.env.PORT || 5001;
-const NODE_ENV = process.env.NODE_ENV || 'development';
-const isDev = NODE_ENV === 'development';
-
-// =========================================================
-// CONFIGURAZIONE MIDDLEWARE
-// =========================================================
-
-// Sicurezza: Helmet per proteggere con header HTTP
-app.use(
-  helmet({
-    contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false,
-  })
-);
-
-// CORS: Configura le origini consentite per le richieste
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://127.0.0.1:3000'
-  // Aggiungi qui i domini di produzione quando necessario
-];
-
-app.use(cors({
-  origin: (origin, callback) => { 
-    if (!origin) return callback(null, true); 
-
-    if (allowedOrigins.includes(origin)) { 
-      callback(null, true); 
-    } else { 
-      console.warn(`Richiesta CORS bloccata da origine: ${origin}`); 
-      callback(null, true); 
-    } 
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-  maxAge: 86400 // Cache preflight per 24 ore
-}));
-
-// Parser per il corpo delle richieste
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Logging delle richieste
-if (isDev) {
-  app.use(morgan('dev'));
-} else {
-  app.use(morgan('combined'));
-}
-
-// Monitoring middleware - Registra tutte le richieste
-app.use((req, res, next) => {
-  const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] ${req.method} ${req.originalUrl}`);
-  if (req.method === 'POST' || req.method === 'PUT') {
-    // Oscura le password nei log
-    const body = { ...req.body };
-    if (body.password) body.password = '********';
-    console.log('Body:', JSON.stringify(body));
-  }
-  next();
-});
-
-// Rate limiting configurazione
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minuti
-  max: isDev ? 1000 : 100, // Più permissivo in sviluppo
-  standardHeaders: true, 
-  legacyHeaders: false,
-  message: {
-    status: 'error',
-    message: 'Troppe richieste, riprova più tardi.'
-  }
-});
-
-// =========================================================
-// CONNESSIONE AL DATABASE
-// =========================================================
-
-// Connessione MongoDB con gestione errori e retry
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/7sundaysacademy';
-const MONGODB_OPTIONS = {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000, // Timeout per la selezione del server
-};
-
-const connectWithRetry = async (retryCount = 0, maxRetries = 5) => {
-  try {
-    console.log(`Tentativo di connessione a MongoDB (${retryCount + 1}/${maxRetries})...`);
-    await mongoose.connect(MONGODB_URI, MONGODB_OPTIONS);
-    console.log('✅ Connessione al database MongoDB stabilita con successo');
-  } catch (err) {
-    console.error(`❌ Errore di connessione al database: ${err.message}`);
-
-    if (retryCount < maxRetries) {
-      const delay = Math.min(1000 * Math.pow(2, retryCount), 30000); // Backoff esponenziale
-      console.log(`Nuovo tentativo in ${delay/1000} secondi...`);
-      setTimeout(() => connectWithRetry(retryCount + 1, maxRetries), delay);
-    } else {
-      console.error('❌ Numero massimo di tentativi raggiunto. Impossibile connettersi al database.');
-      process.exit(1); // Termina l'applicazione in caso di errore fatale
-    }
-  }
-};
-
-// Gestione degli eventi di connessione a MongoDB
-mongoose.connection.on('disconnected', () => {
-  console.log('⚠️ MongoDB disconnesso. Tentativo di riconnessione...');
-  setTimeout(connectWithRetry, 5000);
-});
-
-mongoose.connection.on('error', (err) => {
-  console.error('❌ Errore nella connessione MongoDB:', err);
-});
-
-// Avvia la connessione
-connectWithRetry();
-
-// =========================================================
-// CONFIGURAZIONE ROUTE
-// =========================================================
-// Importa i controller
+// Import controllers
 import authController from './controllers/authController.js';
 import userController from './controllers/userController.js';
 import coursesController from './controllers/coursesController.js';
 import testController from './controllers/testController.js';
 
-//Importa le routes
+// Import routes
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
@@ -154,51 +24,141 @@ import lessonRoutes from './routes/lessonRoutes.js';
 import networkingRoutes from './routes/networkingRoutes.js';
 import emailConfigRoutes from './routes/emailConfigRoutes.js';
 
-// ------ DEFINIZIONE DIRETTA DELLE ROUTE DI AUTENTICAZIONE ------
-// Route di autenticazione
-app.post('/api/auth/register', authController.signup); // Cambiato da register a signup
-app.post('/api/auth/login', authController.login);
-try {
-  // Applica rate limiter alle route API
-  app.use('/api/', apiLimiter);
+// Express app
+const app = express();
+const PORT = process.env.PORT || 5001;
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const isDev = NODE_ENV === 'development';
 
- // Applica il middleware di autenticazione a tutte le routes protette
-  
-  app.use('/users', authController.protect);
-  app.use('/courses', authController.protect);
-  app.use('/lessons', authController.protect);
-  app.use('/tests', authController.protect);
-  app.use('/networking', authController.protect);
-  app.use('/email-config', authController.protect);
-   
-   // Mount delle route con prefisso /api
-    app.use('/api/auth/me', authController.protect);
-    app.get('/api/auth/me', authController.getMe);
-    app.use('/api/auth', authRoutes);
-    app.use('/api/users', userRoutes);
-    app.use('/api/courses', courseRoutes);
-    app.use('/api/lessons', lessonRoutes);
-    app.use('/api/tests', testRoutes);
-    app.use('/api/networking', networkingRoutes);
-    app.use('/api/email-config', emailConfigRoutes);
+// =========================================================
+// Middleware
+// =========================================================
 
-    app.use('/auth', authRoutes);
+// Security
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
+// CORS
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000'
+];
 
-    app.use('/email-config', emailConfigRoutes);
-   
-} catch(error){
-  console.error('Errore durante la configurazione delle routes:', error);
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS blocked from origin: ${origin}`);
+      callback(null, true);
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  maxAge: 86400
+}));
+
+// Request body parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Logging
+if (isDev) {
+  app.use(morgan('dev'));
+} else {
+  app.use(morgan('combined'));
 }
 
+// Monitoring
+app.use((req, res, next) => {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] ${req.method} ${req.originalUrl}`);
+  if (req.method === 'POST' || req.method === 'PUT') {
+    const body = { ...req.body };
+    if (body.password) body.password = '********';
+    console.log('Body:', JSON.stringify(body));
+  }
+  next();
+});
+
+// Rate limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: isDev ? 1000 : 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    status: 'error',
+    message: 'Too many requests, please try again later.'
+  }
+});
+
 // =========================================================
-// ROUTE PUBBLICHE
+// Database Connection
 // =========================================================
 
-// Route di base per verificare che il server sia attivo
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/7sundaysacademy';
+const MONGODB_OPTIONS = {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000,
+};
+
+const connectWithRetry = async (retryCount = 0, maxRetries = 5) => {
+  try {
+    console.log(`Connecting to MongoDB (attempt ${retryCount + 1}/${maxRetries})...`);
+    await mongoose.connect(MONGODB_URI, MONGODB_OPTIONS);
+    console.log('MongoDB connection established successfully');
+  } catch (err) {
+    console.error(`Database connection error: ${err.message}`);
+    if (retryCount < maxRetries) {
+      const delay = Math.min(1000 * Math.pow(2, retryCount), 30000);
+      console.log(`Retrying in ${delay/1000} seconds...`);
+      setTimeout(() => connectWithRetry(retryCount + 1, maxRetries), delay);
+    } else {
+      console.error('Max retries reached. Unable to connect to database.');
+      process.exit(1);
+    }
+  }
+};
+
+mongoose.connection.on('disconnected', () => {
+  console.log('MongoDB disconnected. Attempting to reconnect...');
+  setTimeout(connectWithRetry, 5000);
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('MongoDB connection error:', err);
+});
+
+connectWithRetry();
+
+// =========================================================
+// Routes
+// =========================================================
+
+app.use('/api/', apiLimiter);
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/courses', courseRoutes);
+app.use('/api/lessons', lessonRoutes);
+app.use('/api/tests', testRoutes);
+app.use('/api/networking', networkingRoutes);
+app.use('/api/email-config', emailConfigRoutes);
+
+// =========================================================
+// Public Routes
+// =========================================================
+
 app.get('/', (req, res) => {
   res.json({
-    message: 'API 7Sundays Academy attiva e funzionante',
+    message: '7Sundays Academy API is up and running',
     status: 'online',
     environment: NODE_ENV,
     timestamp: new Date().toISOString(),
@@ -207,7 +167,7 @@ app.get('/', (req, res) => {
       auth: {
         register: '/api/auth/register - POST',
         login: '/api/auth/login - POST',
-        me: '/api/auth/me - GET (protetta)'
+        me: '/api/auth/me - GET (protected)'
       },
       users: '/api/users - GET (admin)',
       emailConfig: {
@@ -223,11 +183,9 @@ app.get('/', (req, res) => {
   });
 });
 
-// Route per il controllo dello stato di salute
 app.get('/health', (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
-  
-  res.status(200).json({ 
+  res.status(200).json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     database: dbStatus,
@@ -236,83 +194,78 @@ app.get('/health', (req, res) => {
 });
 
 // =========================================================
-// GESTIONE ERRORI
+// Error Handling
 // =========================================================
 
-// Gestione errori 404
+// 404 error handler
 app.use((req, res, next) => {
-  console.log(`⚠️ 404: ${req.method} ${req.originalUrl} non trovata`);
-  res.status(404).json({ 
+  console.log(`404: ${req.method} ${req.originalUrl} not found`);
+  res.status(404).json({
     status: 'fail',
-    message: 'Risorsa non trovata',
+    message: 'Resource not found',
     path: req.originalUrl
-  }); 
+  });
 });
 
-// Middleware per la gestione degli errori
+// General error handler
 app.use((err, req, res, next) => {
-  console.error('❌ Errore:', err);
+  console.error('Error:', err);
   const statusCode = err.statusCode || (err.name === 'ValidationError' ? 400 : 500);
-  const errorMessage = err.message || 'Errore interno del server';
-  
-  // Prepara la risposta con maggiori dettagli in sviluppo
+  const errorMessage = err.message || 'Internal server error';
+
   const errorResponse = {
     status: statusCode >= 500 ? 'error' : 'fail',
     message: errorMessage
   };
-  
-  // Aggiungi dettagli aggiuntivi in modalità sviluppo
+
   if (isDev) {
     errorResponse.stack = err.stack;
     if (err.name === 'ValidationError') {
       errorResponse.details = err.errors;
     }
   }
-  
+
   res.status(statusCode).json(errorResponse);
 });
 
-// Gestione degli errori di sintassi JSON
+// JSON syntax error handler
 app.use((err, req, res, next) => {
   if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
     return res.status(400).json({
       status: 'fail',
-      message: 'JSON non valido nella richiesta'
+      message: 'Invalid JSON in request'
     });
   }
   next(err);
 });
 
 // =========================================================
-// AVVIO SERVER
+// Server Startup
 // =========================================================
 
-// Avvio dell'applicazione
 const server = app.listen(PORT, () => {
-  console.log(`✅ Server in esecuzione sulla porta ${PORT}`);
-  console.log(`- Ambiente: ${NODE_ENV}`);
-  console.log(`- URL: http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${NODE_ENV}`);
+  console.log(`URL: http://localhost:${PORT}`);
 });
 
-// Gestione corretta della chiusura del server
+// Graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('Segnale SIGTERM ricevuto. Chiusura in corso...');
+  console.log('SIGTERM signal received. Shutting down...');
   server.close(() => {
     mongoose.connection.close(false, () => {
-      console.log('Connessione MongoDB chiusa.');
+      console.log('MongoDB connection closed.');
       process.exit(0);
     });
   });
 });
 
 process.on('SIGINT', () => {
-  console.log('Segnale SIGINT ricevuto. Chiusura in corso...');
+  console.log('SIGINT signal received. Shutting down...');
   server.close(() => {
     mongoose.connection.close(false, () => {
-      console.log('Connessione MongoDB chiusa.');
+      console.log('MongoDB connection closed.');
       process.exit(0);
     });
   });
 });
-
-module.exports = app; // Per i test

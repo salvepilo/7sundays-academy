@@ -1,6 +1,6 @@
-import Course from '../models/Course.js';
-import Lesson from '../models/Lesson.js';
-import User from '../models/User.js';
+import * as Course from '../models/Course.js';
+import * as Lesson from '../models/Lesson.js';
+import * as User from '../models/User.js';
 
 
 // Ottieni tutti i corsi (con filtri opzionali)

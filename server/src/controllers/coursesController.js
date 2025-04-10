@@ -1,8 +1,8 @@
-import Course from '../models/Course.js';
-import User from '../models/User.js';
-import Lesson from '../models/Lesson.js';
-import Test from '../models/Test.js';
-import Enrollment from '../models/Enrollment.js';
+import * as Course from '../models/Course.js';
+import * as User from '../models/User.js';
+import * as Lesson from '../models/Lesson.js';
+import * as Test from '../models/Test.js';
+import * as Enrollment from '../models/Enrollment.js';
 
 export const getCourse = async (req, res) => {
   try {
