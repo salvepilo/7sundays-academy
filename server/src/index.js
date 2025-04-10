@@ -194,12 +194,13 @@ try {
     usersRoutes = require('./routes/users');
   } catch (error) {
     console.warn('⚠️ usersRoutes non disponibile');
-}
+  }
+  
+  try {
     emailConfigRoutes = require('./routes/emailConfigRoutes');
   } catch (error) {
     console.warn('⚠️ emailConfigRoutes non disponibile:', error.message);
   }
-
 try {  authRoutes = require('./routes/authRoutes');
 } catch (error) {
 
