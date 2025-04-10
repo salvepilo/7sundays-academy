@@ -1,4 +1,3 @@
-tsx
 import React from 'react';
 import { Course } from '../../types/Course';
 import Link from 'next/link';

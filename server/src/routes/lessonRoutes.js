@@ -1,8 +1,8 @@
-const express = require('express');
-const lessonController = require('../controllers/lessonController');
-const noteController = require('../controllers/noteController');
-const authController = require('../controllers/authController');
-const questionController = require('../controllers/questionController');
+import express from 'express';
+import lessonController from '../controllers/lessonController.js';
+import noteController from '../controllers/noteController.js';
+import authController from '../controllers/authController.js';
+import questionController from '../controllers/questionController.js';
 
 const router = express.Router();
 
@@ -49,4 +49,4 @@ router.delete('/:id/questions/:questionId', questionController.deleteQuestion);
 router.delete('/:id/questions/:questionId/answers/:answerId', questionController.deleteAnswer);
 
 
-module.exports = router;
+export default router;

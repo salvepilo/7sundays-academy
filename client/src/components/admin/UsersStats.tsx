@@ -1,4 +1,3 @@
-tsx
 import React from 'react';
 import { Box, Typography, Avatar, Grid } from '@mui/material';
 import { IUser } from '@/interfaces/user';

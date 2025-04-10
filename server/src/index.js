@@ -1,14 +1,18 @@
-// Caricamento variabili d'ambiente
-require("dotenv").config();
+// Importa dotenv e carica le variabili d'ambiente dal file .env
+import dotenv from 'dotenv';
+dotenv.config();
+
+// Caricamento variabili d'ambiente // REMOVED because now is imported in the top
+//require("dotenv").config();
 
 // Importazione dipendenze
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
-const path = require('path');
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
+import path from 'path';
 
 // Inizializzazione dell'app Express
 const app = express();
@@ -136,19 +140,19 @@ connectWithRetry();
 // CONFIGURAZIONE ROUTE
 // =========================================================
 // Importa i controller
-const authController = require('./controllers/authController');
-const userController = require('./controllers/userController');
-const coursesController = require('./controllers/coursesController');
-const testController = require('./controllers/testController');
+import authController from './controllers/authController.js';
+import userController from './controllers/userController.js';
+import coursesController from './controllers/coursesController.js';
+import testController from './controllers/testController.js';
 
 //Importa le routes
-const authRoutes = require("./routes/authRoutes");
-const userRoutes = require("./routes/userRoutes");
-const courseRoutes = require("./routes/courseRoutes");
-const testRoutes = require("./routes/testRoutes");
-const lessonRoutes = require('./routes/lessonRoutes');
-const networkingRoutes = require('./routes/networkingRoutes');
-const emailConfigRoutes = require('./routes/emailConfigRoutes');
+import authRoutes from "./routes/authRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+import courseRoutes from "./routes/courseRoutes.js";
+import testRoutes from "./routes/testRoutes.js";
+import lessonRoutes from './routes/lessonRoutes.js';
+import networkingRoutes from './routes/networkingRoutes.js';
+import emailConfigRoutes from './routes/emailConfigRoutes.js';
 
 // ------ DEFINIZIONE DIRETTA DELLE ROUTE DI AUTENTICAZIONE ------
 // Route di autenticazione

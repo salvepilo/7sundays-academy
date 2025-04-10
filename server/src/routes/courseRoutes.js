@@ -1,7 +1,13 @@
+<<<<<<< HEAD
 const express = require("express");
 const courseController = require("../controllers/courseController");
 const coursesController = require("../controllers/coursesController");
 const authController = require("../controllers/authController");
+=======
+import express from "express";
+import courseController from "../controllers/courseController.js";
+import authController from "../controllers/authController.js";
+>>>>>>> 58881b648b92d5a093df0f6c53d6ccd8d2d27228
   
 const router = express.Router();
 
@@ -28,6 +34,12 @@ router.delete('/:courseId/lessons/:lessonId', courseController.removeLessonFromC
 
 router.delete('/:id', courseController.deleteCourse);
 router.patch('/:id/publish', courseController.publishCourse);
+<<<<<<< HEAD
 router.get('/stats/course', courseController.getCourseStats);
 router.get('/stats/dashboard', coursesController.getDashboardStats);
 module.exports = router;
+=======
+router.get('/stats/dashboard', courseController.getCourseStats);
+router.get('/stats/dashboard', courseController.getDashboardStats); 
+export default router;
+>>>>>>> 58881b648b92d5a093df0f6c53d6ccd8d2d27228

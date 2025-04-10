@@ -33,4 +33,4 @@ router
   .get(userController.getUser)
   .patch(userController.updateUser);
  
-module.exports = router;
+export default router;

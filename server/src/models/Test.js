@@ -16,6 +16,11 @@ const testSchema = new mongoose.Schema(
       ref: 'Course',
       required: [true, 'Il test deve essere associato a un corso'],
     },
+    score: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
     questions: [
       {
         question: {

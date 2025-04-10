@@ -1,4 +1,7 @@
-const User = require('../models/User');
+import User from '../models/User.js';
+
+const exports = {};
+
 const Course = require('../models/Course');
 const TestAttempt = require('../models/TestAttempt');
 
@@ -11,7 +14,7 @@ const filterObj = (obj, ...allowedFields) => {
   return newObj;
 };
 
-// Ottieni tutti gli utenti (solo per admin)
+// Get all users (only for admin)
 exports.getAllUsers = async (req, res) => {
   try {
     const users = await User.find();
@@ -32,7 +35,7 @@ exports.getAllUsers = async (req, res) => {
   }
 };
 
-// Crea un nuovo utente (solo per admin)
+// Create a new user (only for admin)
 exports.createUser = async (req, res) => {
   try {
     const newUser = await User.create({
@@ -61,7 +64,7 @@ exports.createUser = async (req, res) => {
   }
 };
 
-// Ottieni un singolo utente per ID (solo per admin)
+// Get a single user by ID (only for admin)
 exports.getUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -88,7 +91,7 @@ exports.getUser = async (req, res) => {
   }
 };
 
-// Aggiorna un utente esistente (solo per admin)
+// Update an existing user (only for admin)
 exports.updateUser = async (req, res) => {
   try {
     // Non permettere l'aggiornamento della password con questa route
@@ -134,7 +137,7 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-// Aggiorna i dati dell'utente corrente
+// Update the current user's data
 exports.updateMe = async (req, res) => {
   try {
     // Verifica che non si stia tentando di cambiare la password
@@ -169,7 +172,7 @@ exports.updateMe = async (req, res) => {
   }
 };
 
-// Disattiva l'account dell'utente corrente
+// Deactivate the current user's account
 exports.deleteMe = async (req, res) => {
   try {
     await User.findByIdAndUpdate(req.user.id, { active: false });
@@ -187,7 +190,7 @@ exports.deleteMe = async (req, res) => {
   }
 };
 
-// Ottieni il profilo dell'utente corrente con statistiche
+// Get the current user's profile with statistics
 exports.getMyProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -199,7 +202,7 @@ exports.getMyProfile = async (req, res) => {
       });
     }
 
-    // Ottieni i corsi iscritti con dettagli
+    // Get enrolled courses with details
     const enrolledCourses = await Promise.all(
       user.enrolledCourses.map(async (enrollment) => {
         const course = await Course.findById(enrollment.courseId);
@@ -214,7 +217,7 @@ exports.getMyProfile = async (req, res) => {
       })
     ).then(courses => courses.filter(Boolean)); // Filtra eventuali corsi null
 
-    // Ottieni i punteggi dei test
+    // Get test scores
     const testScores = [];
     for (const [testId, score] of user.testScores.entries()) {
       const testAttempt = await TestAttempt.findOne({
@@ -233,7 +236,7 @@ exports.getMyProfile = async (req, res) => {
       }
     }
 
-    // Calcola statistiche
+    // Calculate statistics
     const stats = {
       totalCourses: enrolledCourses.length,
       completedCourses: user.completedCourses.length,
@@ -266,4 +269,5 @@ exports.getMyProfile = async (req, res) => {
   }
 };
 
-module.exports = exports;
+const userController = exports;
+export default userController;
