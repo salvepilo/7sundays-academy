@@ -143,10 +143,10 @@ connectWithRetry();
 // Importa i controller direttamente per garantire che le route funzionino
 const authController = require('./controllers/authController');
 
-let coursesRoutes, usersRoutes;
+let coursesRoutes = null, usersRoutes = null;
 
-let userController, courseController, lessonController, testController, networkingController, emailConfigController;
-let authRoutes, userRoutes, courseRoutes, lessonRoutes, testRoutes, networkingRoutes, emailConfigRoutes;
+let userController = null, courseController = null, lessonController = null, testController = null, networkingController = null, emailConfigController = null;
+let authRoutes = null, userRoutes = null, courseRoutes = null, lessonRoutes = null, testRoutes = null, networkingRoutes = null, emailConfigRoutes = null;
 
 try {
   userController = require('./controllers/userController');
@@ -252,8 +252,8 @@ app.get('/auth/me', authController.protect, authController.getMe);
 
 // Route utente (se disponibili)
 if (userController) {
-  app.get('/api/users/me', authController.protect, userController.getMe || authController.getMe);
-  app.get('/users/me', authController.protect, userController.getMe || authController.getMe);
+  app.get('/api/users/me', authController.protect, userController.getMe);
+  app.get('/users/me', authController.protect, userController.getMe);
 }
 
 // ------ CARICAMENTO ROUTE DA FILE SE DISPONIBILI ------
@@ -261,8 +261,6 @@ if (userController) {
 // Applica rate limiter alle route API
 app.use('/api/', apiLimiter);
 
-app.use('/api/courses', coursesRoutes);
-app.use('/api/users', usersRoutes);
 // Mount delle route con prefisso /api
 if (authRoutes) app.use('/api/auth', authRoutes);
 if (courseRoutes) app.use('/api/courses', courseRoutes);
