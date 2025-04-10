@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import axios from 'axios';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'react-toastify';
 
 // Componenti
 import AdminLayout from '@/components/layout/AdminLayout';
@@ -35,6 +37,7 @@ export default function AdminNetworking() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedContact, setSelectedContact] = useState<NetworkingContact | null>(null);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Reindirizza alla pagina di login se l'utente non è autenticato o non è admin
   useEffect(() => {
@@ -51,97 +54,19 @@ export default function AdminNetworking() {
   useEffect(() => {
     const fetchContacts = async () => {
       try {
-        // In una implementazione reale, questi dati verrebbero dal backend
-        // Qui utilizziamo dati di esempio
-        const mockContacts: NetworkingContact[] = [
-          {
-            id: '1',
-            name: 'Marco Bianchi',
-            position: 'Marketing Director',
-            company: 'Digital Solutions',
-            email: 'marco.bianchi@example.com',
-            phone: '+39 123 456 7890',
-            category: 'marketing',
-            isActive: true,
-            viewCount: 145,
-            contactCount: 32,
-            requirements: {
-              minTestScore: 80,
-              requiredTests: ['1'],
-              requiredCourses: ['1'],
-            },
-          },
-          {
-            id: '2',
-            name: 'Laura Verdi',
-            position: 'SEO Specialist',
-            company: 'Web Experts',
-            email: 'laura.verdi@example.com',
-            phone: '+39 234 567 8901',
-            category: 'marketing',
-            isActive: true,
-            viewCount: 98,
-            contactCount: 24,
-            requirements: {
-              minTestScore: 85,
-              requiredTests: ['2'],
-              requiredCourses: ['2'],
-            },
-          },
-          {
-            id: '3',
-            name: 'Alessandro Rossi',
-            position: 'Social Media Manager',
-            company: 'Social Connect',
-            email: 'alessandro.rossi@example.com',
-            phone: '+39 345 678 9012',
-            category: 'marketing',
-            isActive: false,
-            viewCount: 120,
-            contactCount: 18,
-            requirements: {
-              minTestScore: 75,
-              requiredTests: ['3'],
-              requiredCourses: ['3'],
-            },
-          },
-          {
-            id: '4',
-            name: 'Giulia Neri',
-            position: 'Content Strategist',
-            company: 'Content Hub',
-            email: 'giulia.neri@example.com',
-            phone: '+39 456 789 0123',
-            category: 'marketing',
-            isActive: true,
-            viewCount: 85,
-            contactCount: 15,
-            requirements: {
-              minTestScore: 70,
-              requiredTests: ['4'],
-              requiredCourses: ['4'],
-            },
-          },
-          {
-            id: '5',
-            name: 'Roberto Marini',
-            position: 'Web Developer',
-            company: 'Tech Solutions',
-            email: 'roberto.marini@example.com',
-            phone: '+39 567 890 1234',
-            category: 'development',
-            isActive: true,
-            viewCount: 110,
-            contactCount: 22,
-            requirements: {
-              minTestScore: 90,
-              requiredTests: ['2'],
-              requiredCourses: ['2'],
-            },
-          },
-        ];
-        
-        setContacts(mockContacts);
+        setIsLoading(true);
+        const token = localStorage.getItem('token');
+        const response = await axios.get('/api/networking', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const fetchedContacts: NetworkingContact[] = response.data.data.contacts.map(
+          (contact: any) => ({
+            ...contact,
+            id: contact._id,
+          })
+        );
+
+        setContacts(fetchedContacts);
         setIsLoading(false);
       } catch (error) {
         console.error('Errore nel caricamento dei contatti:', error);
@@ -152,7 +77,7 @@ export default function AdminNetworking() {
     if (isAuthenticated && user?.role === 'admin') {
       fetchContacts();
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, isSubmitting]);
 
   // Filtra i contatti in base ai criteri di ricerca
   const filteredContacts = contacts.filter(contact => {
@@ -173,25 +98,89 @@ export default function AdminNetworking() {
   });
 
   // Gestisce l'apertura del modal per modificare un contatto
-  const handleEditContact = (contact: NetworkingContact) => {
-    setSelectedContact(contact);
-    setShowContactModal(true);
+  const handleEditContact = async (contact: NetworkingContact) => {
+    try {
+      setSelectedContact(contact);
+      setShowContactModal(true);
+    } catch (error) {
+      console.error('Errore durante la modifica del contatto:', error);
+      toast.error('Errore durante la modifica del contatto');
+    }
   };
 
   // Gestisce la creazione di un nuovo contatto
-  const handleCreateContact = () => {
-    setSelectedContact(null);
-    setShowContactModal(true);
+  const handleCreateContact = async () => {
+    try {
+      setSelectedContact(null);
+      setShowContactModal(true);
+    } catch (error) {
+      console.error('Errore durante la creazione del contatto:', error);
+      toast.error('Errore durante la creazione del contatto');
+    }
   };
 
+  // Gestisce la modifica dei contatti
+  const handleUpdateContact = async (contact: NetworkingContact) => {
+    try {
+      setIsSubmitting(true);
+      const token = localStorage.getItem('token');
+
+      await axios.put(`/api/networking/${contact.id}`, contact, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success('Contatto modificato con successo');
+      setIsSubmitting(false);
+    } catch (error) {
+      console.error('Errore durante la modifica del contatto:', error);
+      toast.error('Errore durante la modifica del contatto');
+      setIsSubmitting(false);
+    }
+  };
+
+  // Gestisce la creazione dei contatti
+  const handleSaveContact = async (contact: NetworkingContact) => {
+    try {
+      setIsSubmitting(true);
+      const token = localStorage.getItem('token');
+
+      await axios.post(`/api/networking`, contact, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      toast.success('Contatto creato con successo');
+      setIsSubmitting(false);
+    } catch (error) {
+      console.error('Errore durante la creazione del contatto:', error);
+      toast.error('Errore durante la creazione del contatto');
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteUser = async (id: string) => {
+    try {
+      //
+    } catch (error) {
+      console.error('Errore durante la eliminazione del contatto:', error);
+      toast.error('Errore durante la eliminazione del contatto');
+    }
+  };
   // Gestisce il toggle dello stato attivo/inattivo di un contatto
-  const handleToggleStatus = (id: string) => {
-    setContacts(contacts.map(contact => {
-      if (contact.id === id) {
-        return { ...contact, isActive: !contact.isActive };
-      }
-      return contact;
-    }));
+  const handleToggleStatus = async (id: string, isActive: boolean) => {
+    try {
+      setIsSubmitting(true);
+      const token = localStorage.getItem('token');
+      await axios.patch(
+        `/api/networking/${id}`,
+        { isActive: !isActive },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Contatto ${isActive ? 'disattivato' : 'attivato'} con successo`);
+      setIsSubmitting(false);
+    } catch (error) {
+      console.error('Errore durante la modifica dello stato del contatto:', error);
+      toast.error('Errore durante la modifica dello stato del contatto');
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -365,8 +354,8 @@ export default function AdminNetworking() {
                                 Modifica
                               </button>
                               <button
-                                onClick={() => handleToggleStatus(contact.id)}
-                                className={`${contact.isActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}`}
+                                onClick={() => handleToggleStatus(contact._id, contact.isActive)}
+                                className={`${contact.isActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'} `}
                               >
                                 {contact.isActive ? 'Disattiva' : 'Attiva'}
                               </button>

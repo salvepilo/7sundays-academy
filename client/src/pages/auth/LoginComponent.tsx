@@ -11,7 +11,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 
 type FormData = {
-  email: string;
+  email: string; 
   password: string;
 };
 
@@ -158,4 +158,4 @@ const LoginComponent = () => {
   );
 };
 
-export { LoginComponent };
+export default LoginComponent;
