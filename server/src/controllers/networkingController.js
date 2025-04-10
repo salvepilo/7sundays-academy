@@ -2,6 +2,87 @@ const NetworkingContact = require('../models/NetworkingContact');
 const User = require('../models/User');
 const TestAttempt = require('../models/TestAttempt');
 
+// FUNZIONI MANCANTI AGGIUNTE QUI
+// Crea un nuovo contatto di networking (solo per admin)
+exports.createContact = async (req, res) => {
+  try {
+    const newContact = await NetworkingContact.create(req.body);
+    
+    res.status(201).json({
+      status: 'success',
+      data: {
+        contact: newContact
+      }
+    });
+  } catch (err) {
+    console.error('Errore nella creazione del contatto:', err);
+    res.status(400).json({
+      status: 'fail',
+      message: err.message
+    });
+  }
+};
+
+// Aggiorna un contatto di networking (solo per admin)
+exports.updateContact = async (req, res) => {
+  try {
+    const updatedContact = await NetworkingContact.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true
+      }
+    );
+
+    if (!updatedContact) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Contatto non trovato'
+      });
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        contact: updatedContact
+      }
+    });
+  } catch (err) {
+    console.error('Errore nell\'aggiornamento del contatto:', err);
+    res.status(400).json({
+      status: 'fail',
+      message: err.message
+    });
+  }
+};
+
+// Elimina un contatto di networking (solo per admin)
+exports.deleteContact = async (req, res) => {
+  try {
+    const contact = await NetworkingContact.findByIdAndDelete(req.params.id);
+
+    if (!contact) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Contatto non trovato'
+      });
+    }
+
+    res.status(204).json({
+      status: 'success',
+      data: null
+    });
+  } catch (err) {
+    console.error('Errore nell\'eliminazione del contatto:', err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Errore nell\'eliminazione del contatto'
+    });
+  }
+};
+// FINE DELLE FUNZIONI AGGIUNTE
+
 // Ottieni tutti i contatti di networking disponibili per l'utente
 exports.getContacts = async (req, res) => {
   try {

@@ -1,15 +1,27 @@
 const mongoose = require('mongoose');
+const User = require('./User');
+const TestAttempt = require('./TestAttempt');
 
 const networkingContactSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, 'Il nome del contatto è obbligatorio'],
+      required: [true, 'Il nome è obbligatorio'],
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: [true, "L'email è obbligatoria"],
+      unique: true,
+      lowercase: true,
+    },
+    phone: {
+      type: String,
       trim: true,
     },
     position: {
       type: String,
-      required: [true, 'La posizione professionale è obbligatoria'],
+      required: [true, 'La posizione lavorativa è obbligatoria'],
       trim: true,
     },
     company: {
@@ -17,23 +29,7 @@ const networkingContactSchema = new mongoose.Schema(
       required: [true, "L'azienda è obbligatoria"],
       trim: true,
     },
-    email: {
-      type: String,
-      required: [true, "L'email è obbligatoria"],
-      trim: true,
-      lowercase: true,
-      validate: {
-        validator: function(v) {
-          return /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(v);
-        },
-        message: props => `${props.value} non è un indirizzo email valido!`
-      },
-    },
-    phone: {
-      type: String,
-      trim: true,
-    },
-    linkedin: {
+    linkedinUrl: {
       type: String,
       trim: true,
     },
@@ -43,95 +39,152 @@ const networkingContactSchema = new mongoose.Schema(
     },
     bio: {
       type: String,
+      required: [true, 'La biografia è obbligatoria'],
       trim: true,
     },
     photo: {
       type: String,
-      default: '',
+      default: '/images/contacts/default.jpg',
     },
     category: {
       type: String,
       required: [true, 'La categoria è obbligatoria'],
-      enum: ['marketing', 'design', 'development', 'business', 'other'],
+      enum: ['marketing', 'sviluppo', 'design', 'management', 'risorse-umane', 'finanza', 'legale', 'altro'],
     },
     skills: [String],
-    // Requisiti per accedere al contatto
+    location: {
+      type: String,
+      trim: true,
+    },
+    availability: {
+      type: String,
+      enum: ['disponibile', 'limitata', 'non-disponibile'],
+      default: 'disponibile',
+    },
+    preferredContactMethod: {
+      type: String,
+      enum: ['email', 'telefono', 'linkedin', 'piattaforma'],
+      default: 'email',
+    },
     requirements: {
+      requiredCourses: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Course',
+        },
+      ],
+      requiredTests: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Test',
+        },
+      ],
       minTestScore: {
         type: Number,
-        default: 80, // Punteggio minimo richiesto (percentuale)
+        default: 70,
+        min: 0,
+        max: 100,
       },
-      requiredTests: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Test',
-      }],
-      requiredCourses: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Course',
-      }],
     },
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
-    // Statistiche
     stats: {
       viewCount: {
         type: Number,
         default: 0,
       },
-      contactCount: {
+      contactRequests: {
         type: Number,
         default: 0,
       },
+      lastActive: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+    notes: {
+      type: String,
+      trim: true,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
     },
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
+// Indici per migliorare le performance delle query
+networkingContactSchema.index({ category: 1, skills: 1, isActive: 1 });
+networkingContactSchema.index({ company: 1 });
+
+// Metodo per incrementare il contatore delle visualizzazioni
+networkingContactSchema.methods.incrementViewCount = async function() {
+  this.stats.viewCount += 1;
+  return this.save();
+};
+
+// Metodo per incrementare il contatore delle richieste di contatto
+networkingContactSchema.methods.incrementContactCount = async function() {
+  this.stats.contactRequests += 1;
+  this.stats.lastActive = Date.now();
+  return this.save();
+};
+
 // Metodo per verificare se un utente può accedere a questo contatto
 networkingContactSchema.methods.canUserAccess = async function(userId) {
-  const User = mongoose.model('User');
-  const TestAttempt = mongoose.model('TestAttempt');
-  
-  // Ottieni l'utente con i corsi completati
-  const user = await User.findById(userId).select('completedCourses testScores');
-  if (!user) return false;
-  
-  // Verifica i corsi richiesti
-  const hasRequiredCourses = this.requirements.requiredCourses.length === 0 || 
-    this.requirements.requiredCourses.every(courseId => 
-      user.completedCourses.some(id => id.toString() === courseId.toString())
-    );
-  
-  if (!hasRequiredCourses) return false;
-  
-  // Verifica i test richiesti
-  if (this.requirements.requiredTests.length > 0) {
+  try {
+    // Se il contatto non ha requisiti, tutti possono accedervi
+    if (
+      !this.requirements.requiredCourses.length &&
+      !this.requirements.requiredTests.length &&
+      this.requirements.minTestScore === 0
+    ) {
+      return true;
+    }
+
+    // Ottieni l'utente con i corsi completati e i punteggi dei test
+    const user = await User.findById(userId).select('completedCourses testScores role');
+    
+    // Gli amministratori possono sempre accedere
+    if (user.role === 'admin') return true;
+    
+    // Verifica i corsi completati
+    const hasCompletedRequiredCourses = this.requirements.requiredCourses.length === 0 || 
+      this.requirements.requiredCourses.every(courseId => 
+        user.completedCourses.some(id => id.toString() === courseId.toString())
+      );
+    
+    if (!hasCompletedRequiredCourses) return false;
+    
+    // Verifica i test richiesti
     for (const testId of this.requirements.requiredTests) {
-      const bestScore = await TestAttempt.getBestScore(userId, testId);
-      if (bestScore < this.requirements.minTestScore) {
+      const score = user.testScores.get(testId.toString());
+      
+      // Se il test non è stato completato o il punteggio è inferiore al minimo richiesto
+      if (!score || score < this.requirements.minTestScore) {
         return false;
       }
     }
+    
+    // Se tutte le verifiche sono state superate, l'utente può accedere
+    return true;
+  } catch (error) {
+    console.error('Errore nella verifica dell\'accesso:', error);
+    return false;
   }
-  
-  return true;
 };
 
-// Incrementa il contatore delle visualizzazioni
-networkingContactSchema.methods.incrementViewCount = async function() {
-  this.stats.viewCount += 1;
-  await this.save();
-};
-
-// Incrementa il contatore dei contatti
-networkingContactSchema.methods.incrementContactCount = async function() {
-  this.stats.contactCount += 1;
-  await this.save();
-};
+// Middleware per le query per escludere i contatti non attivi
+networkingContactSchema.pre(/^find/, function(next) {
+  // Escludi i contatti non attivi a meno che non sia esplicitamente richiesto
+  if (!this._conditions.isActive) {
+    this.find({ isActive: { $ne: false } });
+  }
+  next();
+});
 
 const NetworkingContact = mongoose.model('NetworkingContact', networkingContactSchema);
 
