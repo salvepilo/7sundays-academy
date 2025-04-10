@@ -1,25 +1,20 @@
 const express = require('express');
 const lessonController = require('../controllers/lessonController');
-const authController = require('../controllers/authController');
 
-const router = express.Router({ mergeParams: true });
+const router = express.Router();
 
-// Protezione di tutte le routes
-router.use(authController.protect);
+// GET all lessons
+router.get('/', lessonController.getAllLessons);
 
-// Routes per gli utenti iscritti
-router.get('/', lessonController.getLessons);
-router.get('/:id', lessonController.getLesson);
-router.patch('/:id/watch', lessonController.updateWatchProgress);
-router.get('/:id/resources', lessonController.getLessonResources);
-router.get('/:id/video-token', lessonController.getVideoToken);
+// GET lesson by ID
+router.get('/:id', lessonController.getLessonById);
 
-// Routes solo per admin
-router.use(authController.restrictTo('admin'));
+// POST new lesson
 router.post('/', lessonController.createLesson);
-router.patch('/:id', lessonController.updateLesson);
-router.delete('/:id', lessonController.deleteLesson);
-router.patch('/:id/publish', lessonController.publishLesson);
-router.patch('/:id/order', lessonController.updateLessonOrder);
 
+// PUT update lesson by ID
+router.put('/:id', lessonController.updateLesson);
+
+// DELETE lesson by ID
+router.delete('/:id', lessonController.deleteLesson);
 module.exports = router;

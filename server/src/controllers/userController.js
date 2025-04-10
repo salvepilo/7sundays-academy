@@ -1,4 +1,5 @@
-const User = require('../models/User');
+const User = require('../models/User')
+
 const Course = require('../models/Course');
 const TestAttempt = require('../models/TestAttempt');
 
@@ -9,13 +10,13 @@ exports.getAllUsers = async (req, res) => {
 
     res.status(200).json({
       status: 'success',
-      results: users.length,
-      data: {
-        users,
+      results:users.length,
+      data:{
+        users
       },
     });
-  } catch (err) {
-    console.error('Errore nel recupero degli utenti:', err);
+  } catch (error) {
+    console.error('Errore nel recupero degli utenti:', error);
     res.status(500).json({
       status: 'error',
       message: 'Errore nel recupero degli utenti',
@@ -31,9 +32,9 @@ exports.getUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         status: 'fail',
-        message: 'Utente non trovato',
-      });
-    }
+        message: 'Utente non trovato'
+      })
+  }
 
     res.status(200).json({
       status: 'success',
@@ -41,8 +42,8 @@ exports.getUser = async (req, res) => {
         user,
       },
     });
-  } catch (err) {
-    console.error('Errore nel recupero dell\'utente:', err);
+  } catch (error) {
+    console.error('Errore nel recupero dell\'utente:', error);
     res.status(500).json({
       status: 'error',
       message: 'Errore nel recupero dell\'utente',
@@ -57,7 +58,7 @@ exports.updateMe = async (req, res) => {
     if (req.body.password) {
       return res.status(400).json({
         status: 'fail',
-        message: 'Questa route non è per l\'aggiornamento della password. Usa /updatePassword.',
+        message: 'Questa route non è per l\'aggiornamento della password. Usa /updatePassword.'
       });
     }
 
@@ -68,7 +69,7 @@ exports.updateMe = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
       new: true,
       runValidators: true,
-    });
+    })
 
     res.status(200).json({
       status: 'success',
@@ -76,8 +77,8 @@ exports.updateMe = async (req, res) => {
         user: updatedUser,
       },
     });
-  } catch (err) {
-    console.error('Errore nell\'aggiornamento dell\'utente:', err);
+  } catch (error) {
+    console.error('Errore nell\'aggiornamento dell\'utente:', error);
     res.status(500).json({
       status: 'error',
       message: 'Errore nell\'aggiornamento dell\'utente',
@@ -92,10 +93,10 @@ exports.deleteMe = async (req, res) => {
 
     res.status(204).json({
       status: 'success',
-      data: null,
+      data: null
     });
-  } catch (err) {
-    console.error('Errore nella disattivazione dell\'account:', err);
+  } catch (error) {
+    console.error('Errore nella disattivazione dell\'account:', error);
     res.status(500).json({
       status: 'error',
       message: 'Errore nella disattivazione dell\'account',
@@ -107,19 +108,19 @@ exports.deleteMe = async (req, res) => {
 exports.getMyProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
-    
+
     // Ottieni i corsi iscritti con dettagli
     const enrolledCourses = await Promise.all(
       user.enrolledCourses.map(async (enrollment) => {
         const course = await Course.findById(enrollment.courseId);
         return {
-          ...course.toObject(),
+          ...course.toObject(), 
           progress: enrollment.progress,
           enrolledAt: enrollment.enrolledAt,
-          lastWatched: enrollment.lastWatched,
-        };
+          lastWatched: enrollment.lastWatched
+        }
       })
-    );
+    )
 
     // Ottieni i punteggi dei test
     const testScores = [];
@@ -128,15 +129,15 @@ exports.getMyProfile = async (req, res) => {
         user: user._id,
         test: testId,
         percentageScore: score,
-      }).populate('test', 'title');
+      }).populate('test', 'title')
 
       if (testAttempt && testAttempt.test) {
         testScores.push({
           testId,
           title: testAttempt.test.title,
           score,
-          completedAt: testAttempt.completedAt,
-        });
+          completedAt: testAttempt.completedAt
+        })
       }
     }
 
@@ -148,7 +149,7 @@ exports.getMyProfile = async (req, res) => {
       averageProgress: user.getAverageProgress(),
       testsTaken: testScores.length,
     };
-
+    
     res.status(200).json({
       status: 'success',
       data: {
@@ -160,12 +161,12 @@ exports.getMyProfile = async (req, res) => {
         },
         enrolledCourses,
         completedCourses: user.completedCourses,
-        testScores,
-        stats,
+        testScores, 
+        stats
       },
     });
-  } catch (err) {
-    console.error('Errore nel recupero del profilo:', err);
+  } catch (error) {
+    console.error('Errore nel recupero del profilo:', error);
     res.status(500).json({
       status: 'error',
       message: 'Errore nel recupero del profilo',

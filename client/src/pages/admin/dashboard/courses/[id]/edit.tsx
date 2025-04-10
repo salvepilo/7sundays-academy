@@ -8,13 +8,9 @@ import axios from 'axios';
 import AdminLayout from '@/components/layout/AdminLayout';
 
 // Tipi
-interface CourseFormData {
-  title: string;
-  description: string;
-  thumbnail: string;
-  category: string;
-  duration: string;
-  isPublished: boolean;
+
+interface CourseData {
+    name: string;
 }
 
 export default function EditCourse() {
@@ -24,13 +20,7 @@ export default function EditCourse() {
   
   const [formData, setFormData] = useState<CourseFormData>({
     title: '',
-    description: '',
-    thumbnail: '',
-    category: '',
-    duration: '',
-    isPublished: false,
   });
-  
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,14 +40,14 @@ export default function EditCourse() {
   // Carica i dati del corso quando l'ID è disponibile
   useEffect(() => {
     const fetchCourse = async () => {
-      if (!id || !isAuthenticated || user?.role !== 'admin') return;
+      if (!id ) return;
       
       try {
         setIsLoading(true);
         setError(null);
         
         const token = localStorage.getItem('token');
-        const response = await axios.get(
+        const response = await axios.get<{data: {course:CourseData}}>(
           `http://localhost:5001/api/courses/${id}`,
           {
             headers: { Authorization: `Bearer ${token}` }
@@ -65,13 +55,7 @@ export default function EditCourse() {
         );
         
         const courseData = response.data.data.course;
-        setFormData({
-          title: courseData.title || '',
-          description: courseData.description || '',
-          thumbnail: courseData.thumbnail || '',
-          category: courseData.category || '',
-          duration: courseData.duration || '',
-          isPublished: courseData.isPublished || false,
+        setFormData({name: courseData.name || ''
         });
       } catch (err: any) {
         console.error('Errore nel caricamento del corso:', err);
@@ -84,35 +68,26 @@ export default function EditCourse() {
     fetchCourse();
   }, [id, isAuthenticated, user]);
 
+
   // Gestisce i cambiamenti nei campi del form
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    
-    if (type === 'checkbox') {
-      const target = e.target as HTMLInputElement;
-      setFormData(prev => ({
-        ...prev,
-        [name]: target.checked
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
+    const { name, value } = e.target;
+    setFormData(prev => ({...prev,[name]: value}))
   };
+  
+
 
   // Gestisce l'invio del form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id) return;
+     if (!id) return;
     
     setIsSubmitting(true);
     setError(null);
     setSuccessMessage(null);
 
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('token')
       const response = await axios.patch(
         `http://localhost:5001/api/courses/${id}`,
         formData,
@@ -120,6 +95,7 @@ export default function EditCourse() {
           headers: { Authorization: `Bearer ${token}` }
         }
       );
+
 
       setSuccessMessage('Corso aggiornato con successo!');
       
@@ -174,96 +150,16 @@ export default function EditCourse() {
           <div className="mb-6">
             <label htmlFor="title" className="block text-gray-700 text-sm font-bold mb-2">
               Titolo del Corso *
-            </label>
+          </label>
             <input
-              type="text"
-              id="title"
-              name="title"
-              value={formData.title}
+              type='text'
+              id='name'
+              name='name'
+              value={formData.name}
               onChange={handleChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
+              className='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline'
             />
-          </div>
-
-          <div className="mb-6">
-            <label htmlFor="description" className="block text-gray-700 text-sm font-bold mb-2">
-              Descrizione *
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-32"
-              required
-            />
-          </div>
-
-          <div className="mb-6">
-            <label htmlFor="thumbnail" className="block text-gray-700 text-sm font-bold mb-2">
-              URL Immagine di Copertina
-            </label>
-            <input
-              type="text"
-              id="thumbnail"
-              name="thumbnail"
-              value={formData.thumbnail}
-              onChange={handleChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              placeholder="https://example.com/image.jpg"
-            />
-          </div>
-
-          <div className="mb-6">
-            <label htmlFor="category" className="block text-gray-700 text-sm font-bold mb-2">
-              Categoria *
-            </label>
-            <select
-              id="category"
-              name="category"
-              value={formData.category}
-              onChange={handleChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            >
-              <option value="">Seleziona una categoria</option>
-              <option value="Marketing">Marketing</option>
-              <option value="Social Media">Social Media</option>
-              <option value="SEO">SEO</option>
-              <option value="Analytics">Analytics</option>
-              <option value="Content Creation">Content Creation</option>
-            </select>
-          </div>
-
-          <div className="mb-6">
-            <label htmlFor="duration" className="block text-gray-700 text-sm font-bold mb-2">
-              Durata (es. "4h 30m") *
-            </label>
-            <input
-              type="text"
-              id="duration"
-              name="duration"
-              value={formData.duration}
-              onChange={handleChange}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            />
-          </div>
-
-          <div className="mb-6">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                name="isPublished"
-                checked={formData.isPublished}
-                onChange={(e) => setFormData(prev => ({ ...prev, isPublished: e.target.checked }))}
-                className="mr-2"
-              />
-              <span className="text-gray-700 text-sm font-bold">Pubblicato</span>
-            </label>
-          </div>
-
+        </div>
           <div className="flex items-center justify-between">
             <button
               type="button"
@@ -284,4 +180,5 @@ export default function EditCourse() {
       </div>
     </AdminLayout>
   );
-}
+};
+

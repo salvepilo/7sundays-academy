@@ -141,14 +141,10 @@ connectWithRetry();
 // =========================================================
 
 // Importa i controller direttamente per garantire che le route funzionino
-let authController, userController, courseController, lessonController, testController, networkingController, emailConfigController;
+const authController = require('./controllers/authController');
 
-try {
-  authController = require('./controllers/authController');
-} catch (error) {
-  console.error('❌ Errore importazione authController:', error.message);
-  process.exit(1); // Termina l'applicazione se non riesce a caricare il controller di autenticazione
-}
+let userController, courseController, lessonController, testController, networkingController, emailConfigController;
+let authRoutes, userRoutes, courseRoutes, lessonRoutes, testRoutes, networkingRoutes, emailConfigRoutes;
 
 try {
   userController = require('./controllers/userController');
@@ -181,23 +177,20 @@ try {
 }
 
 try {
-  emailConfigRoutes = require('./routes/emailConfigRoutes');
-} catch (error) {
-  console.warn('⚠️ emailConfigRoutes non disponibile:', error.message);
-}
-
-try {
   emailConfigController = require('./controllers/emailConfigController');
 } catch (error) {
   console.warn('⚠️ emailConfigController non disponibile:', error.message);
 }
 
-// Tentativo di importare le route (facoltativo)
-let authRoutes, userRoutes, courseRoutes, lessonRoutes, testRoutes, networkingRoutes, emailConfigRoutes;
-
 try {
-  authRoutes = require('./routes/authRoutes');
+    emailConfigRoutes = require('./routes/emailConfigRoutes');
+  } catch (error) {
+    console.warn('⚠️ emailConfigRoutes non disponibile:', error.message);
+  }
+
+try {  authRoutes = require('./routes/authRoutes');
 } catch (error) {
+
   console.warn('⚠️ authRoutes non disponibile, verranno usate route dirette');
 }
 
@@ -257,7 +250,6 @@ app.use('/api/', apiLimiter);
 
 // Mount delle route con prefisso /api
 if (authRoutes) app.use('/api/auth', authRoutes);
-if (userRoutes) app.use('/api/users', userRoutes);
 if (courseRoutes) app.use('/api/courses', courseRoutes);
 if (lessonRoutes) app.use('/api/lessons', lessonRoutes);
 if (testRoutes) app.use('/api/tests', testRoutes);
@@ -266,7 +258,6 @@ if (emailConfigRoutes) app.use('/api/email-config', emailConfigRoutes);
 
 // Versione senza /api per retrocompatibilità
 if (authRoutes) app.use('/auth', authRoutes);
-if (userRoutes) app.use('/users', userRoutes);
 if (courseRoutes) app.use('/courses', courseRoutes);
 if (lessonRoutes) app.use('/lessons', lessonRoutes);
 if (testRoutes) app.use('/tests', testRoutes);
@@ -291,6 +282,7 @@ app.get('/', (req, res) => {
         login: '/api/auth/login - POST',
         me: '/api/auth/me - GET (protetta)'
       },
+      users: '/api/users - GET (admin)',
       emailConfig: {
         getAll: '/api/email-config - GET (admin)',
         getActive: '/api/email-config/active - GET (admin)',

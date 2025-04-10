@@ -39,6 +39,11 @@ const courseSchema = new mongoose.Schema(
       ref: 'User',
       required: [true, "L'istruttore del corso è obbligatorio"],
     },
+    lessons: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Lesson',
+      required: [true, "L'istruttore del corso è obbligatorio"],
+    },
     enrolledCount: {
       type: Number,
       default: 0,
@@ -68,13 +73,6 @@ const courseSchema = new mongoose.Schema(
     toObject: { virtuals: true },
   }
 );
-
-// Virtual populate per ottenere le lezioni del corso
-courseSchema.virtual('lessons', {
-  ref: 'Lesson',
-  foreignField: 'course',
-  localField: '_id',
-});
 
 // Virtual per calcolare il numero di lezioni
 courseSchema.virtual('lessonsCount').get(function() {

@@ -1,7 +1,7 @@
-const express = require('express');
-const courseController = require('../controllers/courseController');
-const authController = require('../controllers/authController');
-
+const express = require("express");
+const courseController = require("../controllers/courseController");
+const authController = require("../controllers/authController");
+  
 const router = express.Router();
 
 // Route pubbliche
@@ -21,6 +21,9 @@ router.get('/:id/certificate', courseController.generateCertificate);
 router.use(authController.restrictTo('admin'));
 router.post('/', courseController.createCourse);
 router.patch('/:id', courseController.updateCourse);
+router.post('/:courseId/lessons/:lessonId', courseController.addLessonToCourse);
+router.delete('/:courseId/lessons/:lessonId', courseController.removeLessonFromCourse);
+
 router.delete('/:id', courseController.deleteCourse);
 router.patch('/:id/publish', courseController.publishCourse);
 router.get('/stats/dashboard', courseController.getCourseStats);

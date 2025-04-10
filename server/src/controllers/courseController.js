@@ -24,7 +24,7 @@ exports.getAllCourses = async (req, res) => {
     if (req.query.sort) {
       const sortBy = req.query.sort.split(',').join(' ');
       query = query.sort(sortBy);
-    } else {
+    }else {
       query = query.sort('-createdAt');
     }
 
@@ -45,9 +45,9 @@ exports.getAllCourses = async (req, res) => {
     // Esegui la query
     const courses = await query;
 
-    // Aggiungi informazioni sul progresso per l'utente corrente
     let coursesWithProgress = courses;
     if (req.user) {
+        // Aggiungi informazioni sul progresso per l'utente corrente
       const user = await User.findById(req.user.id);
       coursesWithProgress = courses.map(course => {
         const courseObj = course.toObject();
@@ -100,7 +100,7 @@ exports.getCourse = async (req, res) => {
       });
     }
 
-    // Aggiungi informazioni sul progresso per l'utente corrente
+        // Aggiungi informazioni sul progresso per l'utente corrente
     let courseWithProgress = course.toObject();
     if (req.user) {
       const user = await User.findById(req.user.id);
@@ -112,7 +112,7 @@ exports.getCourse = async (req, res) => {
       courseWithProgress.isEnrolled = !!enrollment;
       courseWithProgress.completed = user.completedCourses.includes(course._id);
       
-      if (enrollment && enrollment.lastWatched) {
+            if (enrollment && enrollment.lastWatched) {
         courseWithProgress.lastWatched = enrollment.lastWatched;
       }
     }
@@ -135,12 +135,13 @@ exports.getCourse = async (req, res) => {
 // Crea un nuovo corso (solo admin)
 exports.createCourse = async (req, res) => {
   try {
+    console.log("Received data for creating course:", req.body);
     // Imposta l'istruttore come l'utente corrente (admin)
     req.body.instructor = req.user.id;
     
     const newCourse = await Course.create(req.body);
 
-    res.status(201).json({
+    res.status(201).json({  
       status: 'success',
       data: {
         course: newCourse,
@@ -158,6 +159,7 @@ exports.createCourse = async (req, res) => {
 // Aggiorna un corso (solo admin)
 exports.updateCourse = async (req, res) => {
   try {
+    console.log('Received data for updating course:', req.body, 'course id:', req.params.id);
     const course = await Course.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
@@ -169,7 +171,7 @@ exports.updateCourse = async (req, res) => {
         message: 'Corso non trovato',
       });
     }
-
+    
     res.status(200).json({
       status: 'success',
       data: {
@@ -188,18 +190,23 @@ exports.updateCourse = async (req, res) => {
 // Elimina un corso (solo admin)
 exports.deleteCourse = async (req, res) => {
   try {
-    const course = await Course.findByIdAndDelete(req.params.id);
+    const courseId = req.params.id;
+    const course = await Course.findByIdAndDelete(courseId);
 
     if (!course) {
       return res.status(404).json({
         status: 'fail',
-        message: 'Corso non trovato',
+        message: 'Corso non trovato'
       });
     }
-
-    // Elimina anche tutte le lezioni associate
-    await Lesson.deleteMany({ course: req.params.id });
-
+    
+        // Delete all lessons associated with the course
+    await Lesson.deleteMany({ _id: { $in: course.lessons } });
+    
+    console.log("Course with ID " + courseId + " was deleted successfully.");
+    console.log("Associated lessons were deleted successfully.");
+    
+    
     res.status(204).json({
       status: 'success',
       data: null,
@@ -210,6 +217,66 @@ exports.deleteCourse = async (req, res) => {
       status: 'error',
       message: 'Errore nell\'eliminazione del corso',
     });
+  }
+};
+
+// Aggiungi una lezione a un corso (solo admin)
+exports.addLessonToCourse = async (req, res) => {
+  try {
+    console.log("addLessonToCourse called");
+    const { courseId, lessonId } = req.params;
+
+    console.log('addLessonToCourse called with courseId:', courseId, 'and lessonId:', lessonId);
+
+    const course = await Course.findById(courseId);
+    const lesson = await Lesson.findById(lessonId);
+
+    if (!course || !lesson) {
+      return res.status(404).json({ message: 'Course or lesson not found' });
+    }
+
+    course.lessons.push(lessonId);
+    await course.save();
+
+
+    res.status(200).json({
+      status: 'success',
+      message: `Lesson ${lessonId} added to course ${courseId}`,
+      data: course
+    });
+  } catch (err) {
+    console.error('Errore nell\'aggiungere una lezione al corso:', err);
+    res.status(500).json({
+      status: 'error',
+      message: 'Errore nell\'aggiungere una lezione al corso',
+    });
+  }
+};
+
+// Rimuovi una lezione da un corso (solo admin)
+exports.removeLessonFromCourse = async (req, res) => {
+  try{
+    const { courseId, lessonId } = req.params;
+    console.log('removeLessonFromCourse called with courseId:', courseId, 'and lessonId:', lessonId);
+    
+    const course = await Course.findByIdAndUpdate(
+      courseId,
+      { $pull: { lessons: lessonId } },
+      { new: true }
+    );
+    
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    res.status(200).json({
+        status: 'success',
+        message: `Lesson ${lessonId} removed from course ${courseId}`,
+        data: course
+    });
+  } catch (err) {
+    console.error('Error in removing a lesson from a course:', err);
+    res.status(500).json({ message: 'Error in removing a lesson from a course' });
   }
 };
 
@@ -267,7 +334,7 @@ exports.enrollInCourse = async (req, res) => {
   } catch (err) {
     console.error('Errore nell\'iscrizione al corso:', err);
     res.status(500).json({
-      status: 'error',
+       status: 'error',
       message: 'Errore nell\'iscrizione al corso',
     });
   }
@@ -365,9 +432,9 @@ exports.getCourseStats = async (req, res) => {
     const completedCourses = users.reduce((acc, user) => acc + user.completedCourses.length, 0);
     
     // Corsi più popolari
-    const courses = await Course.find().sort('-enrollmentCount').limit(5);
-    const topCourses = courses.map(course => ({
-      id: course._id,
+        const courses = await Course.find().sort('-enrollmentCount').limit(5);
+        const topCourses = courses.map(course => ({
+            id: course._id,
       title: course.title,
       enrollments: course.enrollmentCount || 0,
       completionRate: course.completionRate || 0

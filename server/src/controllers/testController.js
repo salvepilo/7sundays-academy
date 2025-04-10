@@ -44,18 +44,18 @@ exports.getAllTests = async (req, res) => {
     let testsWithAttempts = tests;
     if (req.user) {
       testsWithAttempts = await Promise.all(
-        tests.map(async test => {
+        tests.map(async (test) => {
           const testObj = test.toObject();
-          
+
           // Ottieni il miglior punteggio dell'utente
           const bestScore = await TestAttempt.getBestScore(req.user.id, test._id);
-          
+
           // Ottieni il numero di tentativi
           const attemptsCount = await TestAttempt.countUserAttempts(req.user.id, test._id);
-          
+
           // Verifica se l'utente ha superato il test
           const hasPassed = await TestAttempt.hasUserPassedTest(req.user.id, test._id);
-          
+
           return {
             ...testObj,
             userBestScore: bestScore,
@@ -108,18 +108,18 @@ exports.getTest = async (req, res) => {
     if (req.user) {
       // Ottieni il miglior punteggio dell'utente
       const bestScore = await TestAttempt.getBestScore(req.user.id, test._id);
-      
+
       // Ottieni il numero di tentativi
       const attemptsCount = await TestAttempt.countUserAttempts(req.user.id, test._id);
-      
+
       // Verifica se l'utente ha superato il test
       const hasPassed = await TestAttempt.hasUserPassedTest(req.user.id, test._id);
-      
+
       testWithAttempts.userBestScore = bestScore;
       testWithAttempts.userAttemptsCount = attemptsCount;
       testWithAttempts.userHasPassed = hasPassed;
       testWithAttempts.canRetake = test.allowRetake && attemptsCount < test.maxAttempts;
-      
+
       // Se l'utente non è admin, rimuovi le risposte corrette
       if (req.user.role !== 'admin' && !test.showCorrectAnswers) {
         testWithAttempts.questions = testWithAttempts.questions.map(q => {
@@ -155,7 +155,7 @@ exports.createTest = async (req, res) => {
         message: 'Corso non trovato',
       });
     }
-    
+
     const newTest = await Test.create(req.body);
 
     res.status(201).json({
@@ -269,7 +269,7 @@ exports.startTestAttempt = async (req, res) => {
     }
 
     // Rimuovi le risposte corrette dalle domande
-    const questionsWithoutAnswers = questions.map(q => {
+    const questionsWithoutAnswers = questions.map((q) => {
       const { correctAnswer, aiEvaluationCriteria, ...questionWithoutAnswer } = q;
       return questionWithoutAnswer;
     });
@@ -355,12 +355,12 @@ exports.submitTestAttempt = async (req, res) => {
             answer.answer,
             question.aiEvaluationCriteria
           );
-          
+
           points = aiScore * question.points;
           isCorrect = aiScore >= 0.7; // Considera corretta se il punteggio è almeno 0.7
-          
+
           aiEvaluation = {
-            score: aiScore,
+           score: aiScore,
             feedback: await generateFeedback(question.question, answer.answer, aiScore),
           };
         } catch (error) {
@@ -391,7 +391,7 @@ exports.submitTestAttempt = async (req, res) => {
 
     // Calcola il punteggio percentuale
     const percentageScore = Math.round((totalScore / maxScore) * 100);
-    
+
     // Determina se l'utente ha superato il test
     const passed = percentageScore >= test.passingScore;
 
@@ -452,7 +452,7 @@ exports.submitTestAttempt = async (req, res) => {
 exports.getUserTestAttempts = async (req, res) => {
   try {
     const userId = req.user.id;
-    
+
     const attempts = await TestAttempt.find({ user: userId })
       .populate('test', 'title passingScore')
       .populate('course', 'title')
@@ -478,7 +478,7 @@ exports.getUserTestAttempts = async (req, res) => {
 exports.getTestAttemptDetails = async (req, res) => {
   try {
     const { attemptId } = req.params;
-    
+
     const attempt = await TestAttempt.findById(attemptId)
       .populate('test', 'title questions passingScore showCorrectAnswers')
       .populate('course', 'title');
@@ -518,19 +518,19 @@ exports.publishTest = async (req, res) => {
   try {
     const { id } = req.params;
     const { isPublished } = req.body;
-    
+
     // Verifica che il valore sia booleano
     if (typeof isPublished !== 'boolean') {
       return res.status(400).json({
         status: 'fail',
-        message: 'Il parametro isPublished deve essere un valore booleano'
+        message: 'Il parametro isPublished deve essere un valore booleano',
       });
     }
-    
+
     // Trova e aggiorna il test
     const test = await Test.findByIdAndUpdate(
       id,
-      { 
+      {
         isPublished,
         publishedAt: isPublished && !test?.publishedAt ? Date.now() : test?.publishedAt
       },
@@ -540,17 +540,17 @@ exports.publishTest = async (req, res) => {
     if (!test) {
       return res.status(404).json({
         status: 'fail',
-        message: 'Test non trovato'
+        message: 'Test non trovato',
       });
     }
-    
+
     res.status(200).json({
       status: 'success',
       data: {
-        test
-      }
+        test,
+      },
     });
-  } catch (err) {
+  } catch (err){
     console.error('Errore nella pubblicazione del test:', err);
     res.status(500).json({
       status: 'error',
@@ -565,16 +565,16 @@ exports.getTestStats = async (req, res) => {
     // Statistiche generali dei test
     const totalTests = await Test.countDocuments();
     const publishedTests = await Test.countDocuments({ isPublished: true });
-    
+
     // Statistiche di completamento
     const totalAttempts = await TestAttempt.countDocuments();
     const passedAttempts = await TestAttempt.countDocuments({ passed: true });
     const completionRate = totalAttempts > 0 ? (passedAttempts / totalAttempts) * 100 : 0;
-    
+
     // Test più difficili (tasso di superamento più basso)
     const hardestTests = await Test.aggregate([
       {
-        $match: { 
+        $match: {
           isPublished: true,
           attemptCount: { $gt: 5 } // Solo test con almeno 5 tentativi
         }
@@ -591,7 +591,7 @@ exports.getTestStats = async (req, res) => {
       { $sort: { passRate: 1 } },
       { $limit: 5 }
     ]);
-    
+
     // Test più popolari (maggior numero di tentativi)
     const popularTests = await Test.aggregate([
       { $match: { isPublished: true } },
@@ -605,20 +605,19 @@ exports.getTestStats = async (req, res) => {
           passRate: { $divide: [{ $multiply: ['$passCount', 100] }, { $max: ['$attemptCount', 1] }] }
         }
       }
-    ]);
-    
-    res.status(200).json({
+    ]);  
+    res.status(200).json(
       status: 'success',
       data: {
         totalTests,
         publishedTests,
         totalAttempts,
-        passedAttempts,
+        passedAttempts, 
         completionRate,
         hardestTests,
-        popularTests
-      }
-    });
+        popularTests,
+      },
+    );
   } catch (err) {
     console.error('Errore nel recupero delle statistiche dei test:', err);
     res.status(500).json({
@@ -634,7 +633,7 @@ const evaluateWithOpenAI = async (question, answer, criteria) => {
     const prompt = `
       Valuta la seguente risposta alla domanda in base ai criteri specificati.
       
-      Domanda: ${question}
+      Domanda: ${question}  
       
       Risposta: ${answer}
       
@@ -654,13 +653,13 @@ const evaluateWithOpenAI = async (question, answer, criteria) => {
     });
 
     const responseText = response.choices[0].message.content.trim();
-    
+
     // Estrai il punteggio numerico dalla risposta
-    const scoreMatch = responseText.match(/([0-9]\.[0-9]+|[0-9]+)/); 
+    const scoreMatch = responseText.match(/([0-9]\.[0-9]+|[0-9]+)/);
     if (scoreMatch) {
       const score = parseFloat(scoreMatch[0]);
       return Math.min(Math.max(score, 0), 1); // Assicura che il punteggio sia tra 0 e 1
-    }
+    } 
     
     // Se non riesce a estrarre un punteggio numerico, restituisci un valore predefinito
     return 0.5;
