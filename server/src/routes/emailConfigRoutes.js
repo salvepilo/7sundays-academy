@@ -1,32 +1,34 @@
-const express = require('express');
-const emailConfigController = require('../controllers/emailConfigController');
-const authController = require('../controllers/authController');
+import express from 'express';
+import { testEmailConfig, getActiveEmailConfig, activateEmailConfig, getAllEmailConfigs, createEmailConfig, getEmailConfig, updateEmailConfig, deleteEmailConfig } from '../controllers/emailConfigController.js';
+import { protect, restrictTo } from '../controllers/authController.js';
 
 const router = express.Router();
 
 // Protezione di tutte le routes - solo utenti autenticati
-router.use(authController.protect);
+router.use(protect);
 
 // Restrizione a solo admin
-router.use(authController.restrictTo('admin'));
+router.use(restrictTo('admin'));
 
 // Test della configurazione email
-router.post('/test', emailConfigController.testEmailConfig);
+router.post('/test', testEmailConfig);
 
 // Ottieni la configurazione attiva
-router.get('/active', emailConfigController.getActiveEmailConfig);
+router.get('/active', getActiveEmailConfig);
 
 // Attiva una configurazione specifica
-router.patch('/:id/activate', emailConfigController.activateEmailConfig);
+router.patch('/:id/activate', activateEmailConfig);
 
 // Routes CRUD standard
 router.route('/')
-  .get(emailConfigController.getAllEmailConfigs)
-  .post(emailConfigController.createEmailConfig);
+  .get(getAllEmailConfigs)
+  .post(createEmailConfig);
 
 router.route('/:id')
-  .get(emailConfigController.getEmailConfig)
-  .patch(emailConfigController.updateEmailConfig)
-  .delete(emailConfigController.deleteEmailConfig);
+  .get(getEmailConfig)
+  .patch(updateEmailConfig)
+  .delete(deleteEmailConfig);
+
+export default router;
 
 module.exports = router;

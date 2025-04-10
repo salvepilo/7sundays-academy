@@ -1,35 +1,34 @@
-
 import express from "express";
-import courseController from "../controllers/courseController.js";
-import authController from "../controllers/authController.js";
+import { getAllCourses, getCourse, enrollInCourse, updateProgress, getEnrolledCourses, generateCertificate, createCourse, updateCourse, addLessonToCourse, removeLessonFromCourse, deleteCourse, publishCourse, getCourseStats } from '../controllers/courseController.js';
+import { protect, restrictTo } from '../controllers/authController.js';
 
   
 const router = express.Router();
 
 // Route pubbliche
-router.get('/', courseController.getAllCourses);
-router.get('/:id', courseController.getCourse);
+router.get('/', getAllCourses);
+router.get('/:id', getCourse);
 
 // Route protette (richiede autenticazione)
-router.use(authController.protect);
+router.use(protect);
 
 // Iscrizione e progresso
-router.post('/:id/enroll', courseController.enrollInCourse);
-router.patch('/:id/progress', courseController.updateProgress);
-router.get('/enrolled/my', courseController.getEnrolledCourses);
-router.get('/:id/certificate', courseController.generateCertificate);
+router.post('/:id/enroll', enrollInCourse);
+router.patch('/:id/progress', updateProgress);
+router.get('/enrolled/my', getEnrolledCourses);
+router.get('/:id/certificate', generateCertificate);
 
 // Route solo per admin
-router.use(authController.restrictTo('admin'));
+router.use(restrictTo('admin'));
 
-router.post('/', courseController.createCourse);
-router.patch('/:id', courseController.updateCourse);
-router.post('/:courseId/lessons/:lessonId', courseController.addLessonToCourse);
-router.delete('/:courseId/lessons/:lessonId', courseController.removeLessonFromCourse);
+router.post('/', createCourse);
+router.patch('/:id', updateCourse);
+router.post('/:courseId/lessons/:lessonId', addLessonToCourse);
+router.delete('/:courseId/lessons/:lessonId', removeLessonFromCourse);
 
-router.delete('/:id', courseController.deleteCourse);
-router.patch('/:id/publish', courseController.publishCourse);
+router.delete('/:id', deleteCourse);
+router.patch('/:id/publish', publishCourse);
 
-router.get('/stats/dashboard', courseController.getCourseStats);
+router.get('/stats/dashboard', getCourseStats);
 
 export default router;

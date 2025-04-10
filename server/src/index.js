@@ -158,24 +158,11 @@ import emailConfigRoutes from './routes/emailConfigRoutes.js';
 // Route di autenticazione
 app.post('/api/auth/register', authController.signup); // Cambiato da register a signup
 app.post('/api/auth/login', authController.login);
-
-// Applica il middleware di autenticazione a tutte le routes protette
-app.use('/api/auth/me', authController.protect);
-app.use('/auth/me', authController.protect);
-app.get('/api/auth/me', authController.getMe);
-app.get('/auth/me', authController.getMe);
-
 try {
   // Applica rate limiter alle route API
   app.use('/api/', apiLimiter);
 
-  // Applica il middleware di protezione solo alle route che lo richiedono
-  app.use('/api/users', authController.protect);
-  app.use('/api/courses', authController.protect);
-  app.use('/api/lessons', authController.protect);
-  app.use('/api/tests', authController.protect);
-  app.use('/api/networking', authController.protect);
-  app.use('/api/email-config', authController.protect);
+ // Applica il middleware di autenticazione a tutte le routes protette
   
   app.use('/users', authController.protect);
   app.use('/courses', authController.protect);
@@ -183,24 +170,23 @@ try {
   app.use('/tests', authController.protect);
   app.use('/networking', authController.protect);
   app.use('/email-config', authController.protect);
-
-
-  // Versione senza /api per retrocompatibilità
-  app.use('/auth', authRoutes);
-  app.use('/courses', courseRoutes);
-  app.use('/users', userRoutes);
-  app.use('/lessons', lessonRoutes);
-  app.use('/tests', testRoutes);
-  app.use('/networking', networkingRoutes);
+   
    // Mount delle route con prefisso /api
-   app.use('/api/auth', authRoutes);
-   app.use('/api/courses', courseRoutes);
-   app.use('/api/users', userRoutes);
-   app.use('/api/lessons', lessonRoutes);
-   app.use('/api/tests', testRoutes);
-   app.use('/api/networking', networkingRoutes);
-  app.use('/email-config', emailConfigRoutes);
+    app.use('/api/auth/me', authController.protect);
+    app.get('/api/auth/me', authController.getMe);
+    app.use('/api/auth', authRoutes);
+    app.use('/api/users', userRoutes);
+    app.use('/api/courses', courseRoutes);
+    app.use('/api/lessons', lessonRoutes);
+    app.use('/api/tests', testRoutes);
+    app.use('/api/networking', networkingRoutes);
+    app.use('/api/email-config', emailConfigRoutes);
 
+    app.use('/auth', authRoutes);
+
+
+    app.use('/email-config', emailConfigRoutes);
+   
 } catch(error){
   console.error('Errore durante la configurazione delle routes:', error);
 }

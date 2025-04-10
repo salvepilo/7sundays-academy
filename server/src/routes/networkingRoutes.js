@@ -1,33 +1,33 @@
-const express = require('express');
-const networkingController = require('../controllers/networkingController');
-const authController = require('../controllers/authController');
+import express from 'express';
+import { getContacts, createContact, updateContact, deleteContact, getContactDetails, searchContacts, sendContactRequest, acceptContactRequest, rejectContactRequest, getPendingRequests, getMessages, sendMessage, markMessageAsRead, deleteMessage, getNetworkingStats } from '../controllers/networkingController.js';
+import { protect, restrictTo } from '../controllers/authController.js';
+
 
 const router = express.Router();
 
 // Protezione di tutte le routes
-router.use(authController.protect);
+router.use(protect);
 
 // Routes per il networking
-router.get('/contacts', networkingController.getContacts);
-router.post('/contacts', networkingController.createContact);
-router.patch('/contacts/:id', networkingController.updateContact);
-router.delete('/contacts/:id', networkingController.deleteContact);
-
-router.get('/contacts/:id', networkingController.getContactDetails);
-router.post('/contacts/search', networkingController.searchContacts);
-router.post('/contacts/request', networkingController.sendContactRequest);
-router.patch('/contacts/request/:id/accept', networkingController.acceptContactRequest);
-router.patch('/contacts/request/:id/reject', networkingController.rejectContactRequest);
-router.get('/contacts/requests/pending', networkingController.getPendingRequests);
+router.get('/contacts', getContacts);
+router.post('/contacts', createContact);
+router.patch('/contacts/:id', updateContact);
+router.delete('/contacts/:id', deleteContact);
+router.get('/contacts/:id', getContactDetails);
+router.post('/contacts/search', searchContacts);
+router.post('/contacts/request', sendContactRequest);
+router.patch('/contacts/request/:id/accept', acceptContactRequest);
+router.patch('/contacts/request/:id/reject', rejectContactRequest);
+router.get('/contacts/requests/pending', getPendingRequests);
 
 // Routes per i messaggi
-router.get('/messages/:contactId', networkingController.getMessages);
-router.post('/messages/:contactId', networkingController.sendMessage);
-router.patch('/messages/:messageId/read', networkingController.markMessageAsRead);
-router.delete('/messages/:messageId', networkingController.deleteMessage);
+router.get('/messages/:contactId', getMessages);
+router.post('/messages/:contactId', sendMessage);
+router.patch('/messages/:messageId/read', markMessageAsRead);
+router.delete('/messages/:messageId', deleteMessage);
 
 // Routes solo per admin
-router.use(authController.restrictTo('admin'));
-router.get('/stats/dashboard', networkingController.getNetworkingStats);
+router.use(restrictTo('admin'));
+router.get('/stats/dashboard', getNetworkingStats);
 
-module.exports = router;
+export default router;

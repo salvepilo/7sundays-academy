@@ -1,9 +1,9 @@
 import express from 'express';
-import lessonController from '../controllers/lessonController.js';
-import noteController from '../controllers/noteController.js';
-import authController from '../controllers/authController.js';
-import questionController from '../controllers/questionController.js';
-
+import { getAllLessons, getLessonById, createLesson, updateLesson, deleteLesson } from '../controllers/lessonController.js';
+import { createNote, getNotes, deleteNote } from '../controllers/noteController.js';
+import { protect, restrictTo } from '../controllers/authController.js';
+import { createQuestion, getQuestions, createAnswer, deleteQuestion, deleteAnswer } from '../controllers/questionController.js';
+  
 const router = express.Router();
 
 // Protezione di tutte le routes successive
@@ -12,17 +12,19 @@ router.use(authController.protect);
 // GET all lessons
 router.get('/', lessonController.getAllLessons);
 
-// GET lesson by ID
-router.get('/:id', lessonController.getLessonById);
+//GET lesson by ID
+router.get('/:id', getLessonById);
 
 // POST new lesson
-router.post('/', lessonController.createLesson);
+router.use(restrictTo('admin'));
+router.post('/', createLesson);
 
 // PUT update lesson by ID
-router.put('/:id', lessonController.updateLesson);
+router.put('/:id', updateLesson);
 
 // DELETE lesson by ID
-router.delete('/:id', lessonController.deleteLesson);
+router.delete('/:id', deleteLesson);
+router.use(restrictTo('user','admin'));
 
 // POST new note for a lesson
 router.post('/:id/notes', noteController.createNote);
@@ -48,5 +50,5 @@ router.delete('/:id/questions/:questionId', questionController.deleteQuestion);
 // DELETE answer by ID
 router.delete('/:id/questions/:questionId/answers/:answerId', questionController.deleteAnswer);
 
-
+ 
 export default router;
