@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 import { Typography, Grid } from '@mui/material';
 import StatisticCard from './StatisticCard';
 import RecentActivity from './RecentActivity';
@@ -28,10 +28,10 @@ const DashboardOverview: React.FC = () => {
         <Grid item xs={12} sm={6} md={3}>
           <StatisticCard title="Total Users" value={users.length} />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={12} sm={6} md={3}>
           <StatisticCard title="Total Courses" value={courses.length} />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
           <StatisticCard title="Total Lessons" value={lessons.length} />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
@@ -43,6 +43,6 @@ const DashboardOverview: React.FC = () => {
       </Grid>
     </div>
   );
-};
+        };
 
 export default DashboardOverview;
