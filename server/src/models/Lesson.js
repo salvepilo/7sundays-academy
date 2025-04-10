@@ -27,4 +27,4 @@ const lessonSchema = new mongoose.Schema({
 
 const Lesson = mongoose.model('Lesson', lessonSchema);
 
-module.exports = Lesson;
+export default Lesson;

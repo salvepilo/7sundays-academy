@@ -1,6 +1,6 @@
-const express = require('express');
-const testController = require('../controllers/testController');
-const authController = require('../controllers/authController');
+import express from 'express';
+import testController from '../controllers/testController.js';
+import authController from '../controllers/authController.js';
  
 const router = express.Router({ mergeParams: true });
 
@@ -22,5 +22,4 @@ router.patch('/:id', testController.updateTest);
 router.delete('/:id', testController.deleteTest);
 router.patch('/:id/publish', testController.publishTest);
 router.get('/stats/dashboard', testController.getTestStats);
-
-module.exports = router;
+export default router;

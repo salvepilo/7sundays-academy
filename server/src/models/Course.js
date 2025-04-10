@@ -114,4 +114,4 @@ courseSchema.statics.calculateStats = async function(courseId) {
 
 const Course = mongoose.model('Course', courseSchema);
 
-module.exports = Course;
+export default Course;

@@ -10,7 +10,6 @@ const signToken = (id) => {
   });
 };
 
-module.exports = exports;
 // Funzione per creare e inviare il token nella risposta
 const createSendToken = (user, statusCode, res) => {
   const token = signToken(user._id);
@@ -58,6 +57,8 @@ exports.signup = async (req, res, next) => {
     });
   }
 };
+
+export default exports;
 
 // Login utente
 exports.login = async (req, res, next) => {

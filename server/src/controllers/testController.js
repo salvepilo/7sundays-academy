@@ -705,4 +705,5 @@ const generateFeedback = async (question, answer, score) => {
   }
 };
 
-module.exports = exports;
+const testController = exports;
+export default testController;

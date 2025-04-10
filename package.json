@@ -4,9 +4,8 @@
   "description": "Piattaforma di e-learning per la gestione di corsi video con funzionalità avanzate",
   "main": "index.js",
   "scripts": {
-    "client": "cd client && npm run dev",
-    "server": "cd server && cross-env PORT=5001 npm run dev",
-    "dev": "concurrently npm:server npm:client",
+    "server": "cd server && PORT=5001 nodemon src/index.js",
+    "dev": "npm run server && cd client && npm run dev",
     "install-all": "npm install && cd client && npm install && cd ../server && npm install",
     "build": "cd client && npm run build"
   },

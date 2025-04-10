@@ -14,4 +14,4 @@ router.patch('/resetPassword/:token', authController.resetPassword);
 // Route protetta per ottenere i dati dell'utente corrente
 router.get('/me', authController.protect, authController.getMe);
 
-module.exports = router;
+export default router;
