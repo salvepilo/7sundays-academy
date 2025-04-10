@@ -62,6 +62,7 @@ export default function AdminDashboard() {
         setIsLoading(true);
         setError(null);
         const token = localStorage.getItem('token');
+        console.log(token)
         
         // Ottieni le statistiche generali
         const statsResponse = await axios.get('/api/courses/stats/dashboard', {
