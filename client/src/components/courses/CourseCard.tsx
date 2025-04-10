@@ -5,7 +5,7 @@ interface Course {
   id: string;
   title: string;
   description: string;
-  thumbnail: string;
+  coverImage: string;
   duration: string;
   lessonsCount: number;
   progress: number;
@@ -21,8 +21,8 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
     <div className="bg-white overflow-hidden shadow-sm rounded-lg transition-all duration-200 hover:shadow-md">
       <div className="relative pb-1/2">
         <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
-          {course.thumbnail ? (
-            <img 
+          {course.coverImage ? (
+            <img
               src={`/images/courses/${course.thumbnail}`} 
               alt={course.title} 
               className="w-full h-full object-cover"

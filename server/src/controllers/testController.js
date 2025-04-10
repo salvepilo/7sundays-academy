@@ -7,6 +7,7 @@ const { OpenAI } = require('openai');
 // Inizializza il client OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+
 });
 
 // Ottieni tutti i test (con filtri opzionali)
@@ -560,6 +561,7 @@ exports.publishTest = async (req, res) => {
 };
 
 // Ottieni statistiche dei test per la dashboard admin - FUNZIONE MANCANTE
+
 exports.getTestStats = async (req, res) => {
   try {
     // Statistiche generali dei test
@@ -606,6 +608,7 @@ exports.getTestStats = async (req, res) => {
         }
       }
     ]);  
+
     res.status(200).json({
       status: 'success',
       data: {
@@ -626,6 +629,7 @@ exports.getTestStats = async (req, res) => {
     });
   }
 };
+
 
 // Funzione per valutare una risposta aperta con OpenAI
 const evaluateWithOpenAI = async (question, answer, criteria) => {
@@ -700,3 +704,5 @@ const generateFeedback = async (question, answer, score) => {
     return 'Impossibile generare un feedback dettagliato. Rivedi la tua risposta e confrontala con il materiale del corso.';
   }
 };
+
+module.exports = exports;

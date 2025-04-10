@@ -80,6 +80,8 @@ exports.getAllCourses = async (req, res) => {
   }
 };
 
+module.exports = exports;
+
 // Ottieni un singolo corso per ID
 exports.getCourse = async (req, res) => {
   try {
@@ -424,6 +426,15 @@ exports.updateProgress = async (req, res) => {
 };
 
 // Ottieni statistiche dei corsi per la dashboard admin
+/**
+ * @route   GET /api/courses/stats/dashboard
+ * @desc    Get course statistics for the admin dashboard
+ * @access  Private (admin only)
+ * @param   {object} req - The request object
+ * @param   {object} res - The response object
+ * @returns {object} - Returns the course statistics
+ */
+
 exports.getCourseStats = async (req, res) => {
   try {
     // Statistiche generali dei corsi

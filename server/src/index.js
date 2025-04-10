@@ -1,10 +1,5 @@
-/**
- * Server principale 7Sundays Academy
- * Configurazione Express, connessione MongoDB e gestione delle route API
- */
-
 // Caricamento variabili d'ambiente
-require('dotenv').config();
+require("dotenv").config();
 
 // Importazione dipendenze
 const express = require('express');
@@ -26,10 +21,12 @@ const isDev = NODE_ENV === 'development';
 // =========================================================
 
 // Sicurezza: Helmet per proteggere con header HTTP
-app.use(helmet({
-  contentSecurityPolicy: false, // Disabilitato per sviluppo
-  crossOriginEmbedderPolicy: false // Disabilitato per sviluppo
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
 // CORS: Configura le origini consentite per le richieste
 const allowedOrigins = [
@@ -39,16 +36,15 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: (origin, callback) => {
-    // Consenti richieste senza origine (come app mobile o Postman)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn(`Richiesta CORS bloccata da origine: ${origin}`);
-      callback(null, true); // Permesso anche se non nell'elenco (solo per sviluppo)
-    }
+  origin: (origin, callback) => { 
+    if (!origin) return callback(null, true); 
+
+    if (allowedOrigins.includes(origin)) { 
+      callback(null, true); 
+    } else { 
+      console.warn(`Richiesta CORS bloccata da origine: ${origin}`); 
+      callback(null, true); 
+    } 
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -84,7 +80,7 @@ app.use((req, res, next) => {
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minuti
   max: isDev ? 1000 : 100, // Più permissivo in sviluppo
-  standardHeaders: true,
+  standardHeaders: true, 
   legacyHeaders: false,
   message: {
     status: 'error',
@@ -111,7 +107,7 @@ const connectWithRetry = async (retryCount = 0, maxRetries = 5) => {
     console.log('✅ Connessione al database MongoDB stabilita con successo');
   } catch (err) {
     console.error(`❌ Errore di connessione al database: ${err.message}`);
-    
+
     if (retryCount < maxRetries) {
       const delay = Math.min(1000 * Math.pow(2, retryCount), 30000); // Backoff esponenziale
       console.log(`Nuovo tentativo in ${delay/1000} secondi...`);
@@ -139,116 +135,59 @@ connectWithRetry();
 // =========================================================
 // CONFIGURAZIONE ROUTE
 // =========================================================
+// Importa i controller
+const authController = require('./controllers/authController');
+const userController = require('./controllers/userController');
+const coursesController = require('./controllers/coursesController');
+const testController = require('./controllers/testController');
 
-// Importa i controller direttamente per garantire che le route funzionino
-const authController = require('./controllers/authController'); // Already imported correctly
-
-let coursesRoutes = null;
-let usersRoutes = null;
-
-let userController = null;
-let coursesController = null;
-let testController = null;
-
-try {
-  userController = require('./controllers/userController');
-} catch (error) {
-  console.warn('⚠️ userController non disponibile:', error.message);
-}
-try {
-  testController = require('./controllers/testController');
-} catch (error) {
-  console.warn('⚠️ testController non disponibile:', error.message);
-}
-try {
-    coursesController = require('./controllers/coursesController');
-} catch (error) {
-    console.warn('⚠️ coursesController non disponibile:', error.message);
-}
-let authRoutes = null;
-
-try {
-    coursesRoutes = require('./routes/courses');
-  } catch (error) {
-    console.warn('⚠️ coursesRoutes non disponibile', error.message);
-  }
-  
-try {
-    usersRoutes = require('./routes/users');
-  } catch (error) {
-    console.warn('⚠️ usersRoutes non disponibile', error.message);
-  }
-
-
-let lessonRoutes = null, testRoutes = null, networkingRoutes = null, emailConfigRoutes = null;
-
-
-try {
-    testRoutes = require('./routes/testRoutes');
-  } catch (error) {
-    console.warn('⚠️ testRoutes non disponibile', error.message);
-  }
-
-  try {
-    lessonRoutes = require('./routes/lessonRoutes');
-  } catch (error) {
-    console.warn('⚠️ lessonRoutes non disponibile', error.message);
-  }
-
-try {
-  networkingRoutes = require('./routes/networkingRoutes');
-} catch (error) {
-  console.warn('⚠️ networkingRoutes non disponibile', error.message);
-}
-try {
-  emailConfigRoutes = require('./routes/emailConfigRoutes');
-} catch (error) {
-  console.warn('⚠️ emailConfigRoutes non disponibile', error.message);
-}
-try {
-  authRoutes = require('./routes/authRoutes');
-} catch (error) {
-  console.warn('⚠️ authRoutes non disponibile', error.message);
-}
+//Importa le routes
+const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
+const courseRoutes = require("./routes/courseRoutes");
+const testRoutes = require("./routes/testRoutes");
+const lessonRoutes = require('./routes/lessonRoutes');
+const networkingRoutes = require('./routes/networkingRoutes');
+const emailConfigRoutes = require('./routes/emailConfigRoutes');
 
 // ------ DEFINIZIONE DIRETTA DELLE ROUTE DI AUTENTICAZIONE ------
-// Queste sono le route essenziali che funzioneranno anche se le route dai file non possono essere caricate
-
 // Route di autenticazione
 app.post('/api/auth/register', authController.register);
 app.post('/api/auth/login', authController.login);
-app.get('/api/auth/me', authController.protect, authController.getMe);
 
 // Versione senza /api per retrocompatibilità
 app.post('/auth/register', authController.register);
 app.post('/auth/login', authController.login);
-app.get('/auth/me', authController.protect, authController.getMe);
 
-// Route utente (se disponibili)
-if (userController) app.get('/api/users/me', authController.protect, authController.getMe);
+//Applica il middleware di autenticazione a tutte le routes
+app.use(authController.protect);
+app.get('/api/auth/me', authController.getMe);
+app.get('/auth/me', authController.getMe);
 
+try {
+  // Applica rate limiter alle route API
+  app.use('/api/', apiLimiter);
 
-// ------ CARICAMENTO ROUTE DA FILE SE DISPONIBILI ------
+  //Mount delle route con prefisso /api
+  app.use('/api/auth', authRoutes);
+  app.use('/api/courses', courseRoutes);
+  app.use('/api/users', userRoutes);
+  app.use('/api/lessons', lessonRoutes);
+  app.use('/api/tests', testRoutes);
+  app.use('/api/networking', networkingRoutes);
+  app.use('/api/email-config', emailConfigRoutes);
 
-// Applica rate limiter alle route API
-app.use('/api/', apiLimiter);
+  // Versione senza /api per retrocompatibilità
+  app.use('/auth', authRoutes);
+  app.use('/courses', courseRoutes);
+  app.use('/lessons', lessonRoutes);
+  app.use('/tests', testRoutes);
+  app.use('/networking', networkingRoutes);
+  app.use('/email-config', emailConfigRoutes);
 
-//Mount delle route con prefisso /api
-if (authRoutes) app.use('/api/auth', authRoutes);
-if (coursesRoutes) app.use('/api/courses', coursesRoutes);
-if (usersRoutes) app.use('/api/users', usersRoutes);
-if (lessonRoutes) app.use('/api/lessons', lessonRoutes);
-if (testRoutes) app.use('/api/tests', testRoutes);
-if (networkingRoutes) app.use('/api/networking', networkingRoutes);
-if (emailConfigRoutes) app.use('/api/email-config', emailConfigRoutes);
-
-// Versione senza /api per retrocompatibilità
-if (authRoutes) app.use('/auth', authRoutes);
-if (coursesRoutes) app.use('/courses', coursesRoutes);
-if (lessonRoutes) app.use('/lessons', lessonRoutes);
-if (testRoutes) app.use('/tests', testRoutes);
-if (networkingRoutes) app.use('/networking', networkingRoutes);
-if (emailConfigRoutes) app.use('/email-config', emailConfigRoutes);
+} catch(error){
+  console.error(error)
+}
 // =========================================================
 // ROUTE PUBBLICHE
 // =========================================================
@@ -285,7 +224,7 @@ app.get('/', (req, res) => {
 app.get('/health', (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
   
-  res.status(200).json({
+  res.status(200).json({ 
     status: 'ok',
     timestamp: new Date().toISOString(),
     database: dbStatus,
@@ -304,7 +243,7 @@ app.use((req, res, next) => {
     status: 'fail',
     message: 'Risorsa non trovata',
     path: req.originalUrl
-  });
+  }); 
 });
 
 // Middleware per la gestione degli errori
