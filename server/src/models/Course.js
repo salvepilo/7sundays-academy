@@ -44,11 +44,12 @@ const courseSchema = new mongoose.Schema(
       ref: 'Lesson',
       required: [true, "L'istruttore del corso è obbligatorio"],
     },
-    enrolledCount: {
-      type: Number,
-      default: 0,
+  ],
+  enrolledCount: {
+    type: Number,
+    default: 0,
     },
-    completionRate: {
+  completionRate: {
       type: Number,
       default: 0,
     },
