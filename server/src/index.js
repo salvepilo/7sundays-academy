@@ -145,7 +145,6 @@ connectWithRetry();
 // =========================================================
 // Routes
 // =========================================================
-app.use('/api/', );
 app.use('/api/users', apiLimiter, userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);

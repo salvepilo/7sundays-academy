@@ -199,28 +199,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (response.data && response.data.status === 'success') {
         await login(email, password);
       } else {
-        // Login manuale con i dati della risposta
-        const { token, user } = response.data;
-        
-        if (token && user) {
-          localStorage.setItem('token', token);
-          setUser(user);
-          
-          // Reindirizza in base al ruolo
-          if (user.role === 'admin') {
-            router.push('/admin/dashboard');
-          } else {
-            router.push('/dashboard');
-          }
-        } else {
-          throw new Error('Risposta non valida dal server');
-        }
+        // Se la registrazione non ha successo, imposta l'errore
+        setError(response.data?.message || 'Errore nella registrazione.');
       }
     } catch (err: any) {
       console.error('Errore registrazione:', err);
-      
+      if(err.response && !err.response.data.token){
+        setError(err.response.data?.message || `Errore ${err.response.status}: ${err.response.statusText}`);
+      }
       // Gestione dettagliata degli errori
-      if (err.response) {
+      else if (err.response) {
+        
         // La richiesta è stata effettuata e il server ha risposto con un codice di stato
         // che non rientra nell'intervallo 2xx
         setError(err.response.data?.message || `Errore ${err.response.status}: ${err.response.statusText}`);
