@@ -1,15 +1,16 @@
-import dotenv from 'dotenv';
+const dotenv = require('dotenv');
 dotenv.config();
 
-import express from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import rateLimit from 'express-rate-limit';
-import path from 'path';
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
+const path = require('path');
 
 // Import controllers
+
 import * as authController from './controllers/authController.js';
 import * as userController from './controllers/userController.js';
 import * as coursesController from './controllers/coursesController.js';
@@ -17,12 +18,9 @@ import * as testController from './controllers/testController.js';
 
 // Import routes
 import authRoutes from './routes/authRoutes.js';
+
 import userRoutes from './routes/userRoutes.js';
 import courseRoutes from './routes/courseRoutes.js';
-import emailConfigRoutes from './routes/emailConfigRoutes.js';
-import lessonRoutes from './routes/lessonRoutes.js';
-import networkingRoutes from './routes/networkingRoutes.js';
-
 
 import testRoutes from "./routes/testRoutes.js";
 import lessonRoutes from './routes/lessonRoutes.js';
@@ -118,7 +116,7 @@ const MONGODB_OPTIONS = {
 const connectWithRetry = async (retryCount = 0, maxRetries = 5) => {
   try {
     console.log(`Connecting to MongoDB (attempt ${retryCount + 1}/${maxRetries})...`);
-    await mongoose.connect(MONGODB_URI, MONGODB_OPTIONS);
+   await mongoose.connect(MONGODB_URI, MONGODB_OPTIONS);
     console.log('MongoDB connection established successfully');
   } catch (err) {
     console.error(`Database connection error: ${err.message}`);
@@ -155,7 +153,6 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/lessons', lessonRoutes);
 app.use('/api/tests', testRoutes);
 app.use('/api/networking', networkingRoutes);
-app.use('/api/email-config', emailConfigRoutes);
 
 // =========================================================
 // Public Routes
@@ -264,6 +261,7 @@ process.on('SIGTERM', () => {
     });
   });
 });
+
 
 process.on('SIGINT', () => {
   console.log('SIGINT signal received. Shutting down...');

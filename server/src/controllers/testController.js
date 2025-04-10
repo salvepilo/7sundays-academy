@@ -1,8 +1,8 @@
-import * as Test from '../models/Test.mjs';
-import * as TestAttempt from '../models/TestAttempt.mjs';
-import * as User from '../models/User.mjs';
-import * as Course from '../models/Course.mjs';
-import { OpenAI } from 'openai';
+import * as Test from '../models/Test.js';
+import * as TestAttempt from '../models/TestAttempt.js';
+import * as User from '../models/User.js';
+import * as Course from '../models/Course.js';
+
 import dotenv from 'dotenv';
 
 // Inizializza il client OpenAI
@@ -14,13 +14,10 @@ const openai = new OpenAI({
 export const getAllTests = async (req, res) => {
   try {
     // Costruisci la query di filtro
-    const queryObj = { ...req.query };
-    const excludedFields = ['page', 'sort', 'limit', 'fields'];
-    excludedFields.forEach((el) => delete queryObj[el]);
+    const queryObj = { ...req.query };   
+    const excludedFields = ['page', 'sort', 'limit', 'fields']; excludedFields.forEach(el => delete queryObj[el]);
 
-    // Se l'utente non è admin, mostra solo i test pubblicati
-    let query = Test.find(queryObj);
-    if (req.user && req.user.role !== 'admin') {
+    let query = Test.find(queryObj);if(req.user && req.user.role !== "admin") {
       query = query.find({ isPublished: true });
     }
 
@@ -42,8 +39,8 @@ export const getAllTests = async (req, res) => {
     const tests = await query.populate('course', 'title');
 
     // Aggiungi informazioni sui tentativi dell'utente corrente
-    let testsWithAttempts = tests;
-    if (req.user) {
+    let testsWithAttempts = tests;    
+    if(req.user) {
       testsWithAttempts = await Promise.all(
         tests.map(async (test) => {
           const testObj = test.toObject(); // Converti il documento Mongoose in un oggetto JavaScript normale
@@ -114,7 +111,7 @@ export const getTest = async (req, res) => {
 
     // Aggiungi informazioni sui tentativi dell'utente corrente
     let testWithAttempts = test.toObject();
-    if (req.user) {
+    if(req.user){
       // Ottieni il miglior punteggio dell'utente
       const bestScore = await TestAttempt.getBestScore(
         req.user.id,
@@ -139,8 +136,8 @@ export const getTest = async (req, res) => {
       testWithAttempts.canRetake = test.allowRetake && attemptsCount < test.maxAttempts;
 
       // Se l'utente non è admin, rimuovi le risposte corrette
-      if (req.user.role !== 'admin' && !test.showCorrectAnswers) {
-        testWithAttempts.questions = testWithAttempts.questions.map((q) => {
+      if(req.user.role !== "admin" && !test.showCorrectAnswers){
+        testWithAttempts.questions = testWithAttempts.questions.map(q => {
           const {
             correctAnswer,
             aiEvaluationCriteria,
@@ -180,7 +177,7 @@ export const createTest = async (req, res) => {
 
     const newTest = await Test.create(req.body);
 
-    res.status(201).json({
+    res.status(200).json({
       status: 'success',
       data: {
         test: newTest,
@@ -237,7 +234,7 @@ export const deleteTest = async (req, res) => {
       });
     }
 
-    // Elimina anche tutti i tentativi associati
+    // Elimina anche tutti i tentativi associati    
     await TestAttempt.deleteMany({ test: req.params.id });
 
     res.status(204).json({
@@ -276,7 +273,7 @@ export const startTestAttempt = async (req, res) => {
     }
 
     // Verifica se l'utente può fare un altro tentativo
-    const attemptsCount = await TestAttempt.countUserAttempts(userId, id);
+    const attemptsCount = await TestAttempt.countUserAttempts(userId, id);    
     if (attemptsCount >= test.maxAttempts && !test.allowRetake) {
       return res.status(400).json({
         status: 'fail',
@@ -288,13 +285,12 @@ export const startTestAttempt = async (req, res) => {
     let questions = [...test.questions];
     if (test.randomizeQuestions) {
       questions = questions.sort(() => Math.random() - 0.5);
-    }
-
-    // Rimuovi le risposte corrette dalle domande
-    const questionsWithoutAnswers = questions.map((q) => {
+    }    
+    // Rimuovi le risposte corrette dalle domande    
+    const questionsWithoutAnswers = questions.map(q => {
       const { correctAnswer, aiEvaluationCriteria, ...questionWithoutAnswer } = q;
       return questionWithoutAnswer;
-    })
+    })    
     
 
     
@@ -332,8 +328,8 @@ export const submitTestAttempt = async (req, res) => {
     // Verifica se il test esiste
     const test = await Test.findById(id);
     if (!test) {
-      return res.status(404).json({
-        status: 'fail',
+      return res.status(404).json({status: 'fail',
+
         message: 'Test non trovato',
       });
     }
@@ -368,7 +364,7 @@ export const submitTestAttempt = async (req, res) => {
       }
 
       let isCorrect = false;
-      let points = 0;
+        let points = 0;        
       let aiEvaluation = null;
 
       // Valuta la risposta in base al tipo di domanda
@@ -384,7 +380,7 @@ export const submitTestAttempt = async (req, res) => {
           points = aiScore * question.points;
           isCorrect = aiScore >= 0.7; // Considera corretta se il punteggio è almeno 0.7
 
-          aiEvaluation = {
+          aiEvaluation = {            
             score: aiScore,
 
             feedback: await generateFeedback(question.question, answer.answer, aiScore),
@@ -394,7 +390,7 @@ export const submitTestAttempt = async (req, res) => {
           // In caso di errore, valuta manualmente
           isCorrect = false;
           points = 0;
-          aiEvaluation = {
+          aiEvaluation = {            
             score: 0,
             feedback: 'Impossibile valutare la risposta automaticamente. Contatta un amministratore.',
           };
@@ -422,7 +418,7 @@ export const submitTestAttempt = async (req, res) => {
     const percentageScore = Math.round((totalScore / maxScore) * 100);
 
     // Determina se l'utente ha superato il test
-    const passed = percentageScore >= test.passingScore;
+    const passed = percentageScore >= test.passingScore;    
 
     // Ottieni il numero del tentativo
     const attemptsCount = await TestAttempt.countUserAttempts(userId, id);
@@ -449,7 +445,7 @@ export const submitTestAttempt = async (req, res) => {
     // Se l'utente ha superato il test, aggiorna il suo punteggio
     if (passed) {
       const user = await User.findById(userId);
-      user.testScores.set(id.toString(), percentageScore);
+      user.testScores.set(id.toString(), percentageScore);      
       await user.save({ validateBeforeSave: false });
     }
 
@@ -519,7 +515,7 @@ export const getTestAttemptDetails = async (req, res) => {
       });
     }
 
-    // Verifica che l'utente sia il proprietario del tentativo o un admin
+    // Verifica che l'utente sia il proprietario del tentativo o un admin    
     if (attempt.user.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({
         status: 'fail',
@@ -548,7 +544,7 @@ export const publishTest = async (req, res) => {
     const { id } = req.params;
     const { isPublished } = req.body;
 
-    // Verifica che il valore sia booleano
+    // Verifica che il valore sia booleano    
     if (typeof isPublished !== 'boolean') {
       return res.status(400).json({
         status: 'fail',
@@ -559,7 +555,7 @@ export const publishTest = async (req, res) => {
     // Trova e aggiorna il test
     const test = await Test.findByIdAndUpdate(
       id,
-      {
+      {        
         isPublished,
         publishedAt: isPublished && !test?.publishedAt ? Date.now() : test?.publishedAt
       },
@@ -663,8 +659,7 @@ const evaluateWithOpenAI = async (question, answer, criteria) => {
   try {
     const prompt = `
       Valuta la seguente risposta alla domanda in base ai criteri specificati.
-      
-      Domanda: ${question}  
+            Domanda: ${question}  
       
       Risposta: ${answer}
       
@@ -702,9 +697,9 @@ const evaluateWithOpenAI = async (question, answer, criteria) => {
 
 // Funzione per generare feedback per una risposta
 const generateFeedback = async (question, answer, score) => {
-  try {
+  try {    
     const prompt = `
-      Fornisci un feedback costruttivo per la seguente risposta a una domanda.
+      Fornisci un feedback costruttivo per la seguente risposta a una domanda.    
       
       Domanda: ${question}
       

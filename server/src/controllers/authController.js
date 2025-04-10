@@ -1,9 +1,9 @@
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import User from '../models/User.mjs';
-import * as emailService from '../utils/emailService.mjs';
+import User from '../models/User.js';
+import * as emailService from '../utils/emailService.js';
 
-
+ 
 // Funzione per generare il token JWT
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -34,13 +34,13 @@ export const signup = async (req, res, next) => {
     const existingUser = await User.default.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
-        status: 'fail',
+        status: 'fail', 
         message: 'Email già registrata',
       });
     }
 
-    // Crea un nuovo utente
-    const newUser = await User.default.create({
+     // Crea un nuovo utente
+    const newUser = await User.create({
       name,
       email,
       password,
@@ -59,8 +59,8 @@ export const signup = async (req, res, next) => {
   }
 };
 
-
-
+ 
+ 
 // Login utente
 export const login = async (req, res, next) => {
   try {
@@ -102,14 +102,14 @@ export const updatePassword = async (req, res, next) => {
     // 1) Ottieni l'utente dalla collezione
     const user = await User.default.findById(req.user.id).select('+password');
     
-    // 2) Verifica se la password corrente è corretta
+    // 2) Verifica se la password corrente è corretta 
     if (!(await user.correctPassword(req.body.currentPassword, user.password))) {
       return res.status(401).json({
         status: 'fail',
         message: 'La password corrente non è corretta',
       });
     }
-    
+ 
     // 3) Aggiorna la password
     user.password = req.body.password;
     user.passwordConfirm = req.body.passwordConfirm;
@@ -146,9 +146,9 @@ export const forgotPassword = async (req, res, next) => {
     const resetUrl = `${req.protocol}://${req.get(
       'host'
     )}/resetPassword/${resetToken}`;
-
+ 
     try {
-      await emailService.sendPasswordResetEmail(user, resetToken, resetUrl);
+      await emailService.sendPasswordResetEmail(user, resetToken, resetUrl); 
       res.status(200).json({
         status: 'success',
         message: 'Email di reset password inviata!',
@@ -176,12 +176,12 @@ export const forgotPassword = async (req, res, next) => {
 // Reset della password
 export const resetPassword = async (req, res, next) => {
   try {
-    // 1) Ottieni l'utente in base al token
-    const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+    // 1) Ottieni l'utente in base al token 
+    const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex'); 
     const user = await User.default.findOne({ 
       passwordResetToken: hashedToken, 
       passwordResetExpires: { $gt: Date.now() } 
-    });
+    }); 
 
     // 2) Se il token è scaduto o non valido
     if (!user) {
@@ -212,13 +212,13 @@ export const resetPassword = async (req, res, next) => {
 // Middleware per proteggere le route che richiedono autenticazione
 export const protect = async (req, res, next) => {
   try {
-    // 1) Ottieni il token e verifica se esiste
+    // 1) Ottieni il token e verifica se esiste 
     let token;
     if (
       req.headers.authorization &&
       req.headers.authorization.startsWith('Bearer')
     ) {
-      token = req.headers.authorization.split(' ')[1];
+      token = req.headers.authorization.split(' ')[1]; 
     }
     if (!token) {
       return res.status(401).json({
@@ -228,11 +228,11 @@ export const protect = async (req, res, next) => {
     }
 
     // 2) Verifica il token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
+    const decoded = jwt.verify(token, process.env.JWT_SECRET); 
+ 
     // 3) Verifica se l'utente esiste ancora  
-    const currentUser = await User.default.findById(decoded.id);
-    if (!currentUser) {
+    const currentUser = await User.default.findById(decoded.id); 
+    if (!currentUser) { 
       return res.status(401).json({
         status: 'fail',
         message: "L'utente a cui appartiene questo token non esiste più.",
@@ -240,8 +240,8 @@ export const protect = async (req, res, next) => {
     }
 
     // 4) Verifica se l'utente ha cambiato la password dopo l'emissione del token
-    if (currentUser.changedPasswordAfter && currentUser.changedPasswordAfter(decoded.iat)) {
-      return res.status(401).json({
+    if (currentUser.changedPasswordAfter && currentUser.changedPasswordAfter(decoded.iat)) { 
+      return res.status(401).json({ 
         status: 'fail',
         message: 'La password è stata modificata di recente. Effettua nuovamente il login.',
       });
@@ -251,7 +251,7 @@ export const protect = async (req, res, next) => {
     req.user = currentUser;
     next();
   } catch (err) {
-    if (err.name === 'JsonWebTokenError') {
+    if (err.name === 'JsonWebTokenError') { 
       return res.status(401).json({
         status: 'fail',
         message: 'Token non valido. Effettua nuovamente il login.',
@@ -288,12 +288,12 @@ export const restrictTo = (...roles) => {
 export const getMe = async (req, res, next) => {
   try {
     const user = await User.default.findById(req.user.id);
-    
+     
     if (!user) {
       return res.status(404).json({
         status: 'fail',
         message: 'Utente non trovato',
-      });
+      }); 
     }
     
     res.setHeader('Cache-Control', 'no-store');

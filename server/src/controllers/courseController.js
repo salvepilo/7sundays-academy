@@ -1,6 +1,6 @@
-import Course from '../models/Course.mjs';
-import Lesson from '../models/Lesson.mjs';
-import User from '../models/User.mjs';
+import Course from '../models/Course.js';
+import Lesson from '../models/Lesson.js';
+import User from '../models/User.js';
 import mongoose from 'mongoose';
 
 // Ottieni tutti i corsi (con filtri opzionali)

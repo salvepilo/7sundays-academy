@@ -1,4 +1,4 @@
-import * as userController from './userController.mjs';
+import * as userController from './userController.js';
 
 describe('userController', () => {
   describe('getAllUsers', () => {

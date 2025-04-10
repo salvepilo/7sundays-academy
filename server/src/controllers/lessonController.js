@@ -1,6 +1,6 @@
-import Lesson from '../models/Lesson.mjs';
-import Course from '../models/Course.mjs';
-import User from '../models/User.mjs';
+import Lesson from '../models/Lesson.js';
+import Course from '../models/Course.js';
+import User from '../models/User.js';
 
 export const getAllLessons = async (req, res) => {
   try {
