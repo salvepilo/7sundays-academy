@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
+const coursesController = require('../controllers/coursesController');
 
 // /api/courses/stats/dashboard
 router.get('/stats/dashboard', authController.protect, authController.restrictTo('admin'), (req, res) => {
@@ -30,6 +31,12 @@ router.get('/', authController.protect, authController.restrictTo('admin'), (req
     },
   });
 });
+
+// /api/courses/:id
+router.get('/:id', authController.protect, authController.restrictTo('admin'), coursesController.getCourse);
+
+// /api/courses/:id
+router.patch('/:id', authController.protect, authController.restrictTo('admin'), coursesController.updateCourse);
 
 module.exports = router;
 ```

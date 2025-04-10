@@ -48,7 +48,7 @@ export default function EditCourse() {
         
         const token = localStorage.getItem('token');
         const response = await axios.get<{data: {course:CourseData}}>(
-          `http://localhost:5001/api/courses/${id}`,
+          `/api/courses/${id}`,
           {
             headers: { Authorization: `Bearer ${token}` }
           }
@@ -89,7 +89,7 @@ export default function EditCourse() {
     try {
       const token = localStorage.getItem('token')
       const response = await axios.patch(
-        `http://localhost:5001/api/courses/${id}`,
+        `/api/courses/${id}`,
         formData,
         {
           headers: { Authorization: `Bearer ${token}` }

@@ -208,6 +208,13 @@ try {  authRoutes = require('./routes/authRoutes');
 }
 
 try {
+    coursesController = require('./controllers/coursesController');
+} catch (error) {
+    console.warn('⚠️ coursesController non disponibile:', error.message);
+}
+
+
+try {
   userRoutes = require('./routes/userRoutes');
 } catch (error) {
   console.warn('⚠️ userRoutes non disponibile');
@@ -265,6 +272,7 @@ app.use('/api/', apiLimiter);
 if (authRoutes) app.use('/api/auth', authRoutes);
 if (courseRoutes) app.use('/api/courses', courseRoutes);
 if (lessonRoutes) app.use('/api/lessons', lessonRoutes);
+if (coursesRoutes) app.use('/api/courses', coursesRoutes);
 if (testRoutes) app.use('/api/tests', testRoutes);
 if (networkingRoutes) app.use('/api/networking', networkingRoutes);
 if (emailConfigRoutes) app.use('/api/email-config', emailConfigRoutes);
