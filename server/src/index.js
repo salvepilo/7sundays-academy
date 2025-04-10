@@ -28,7 +28,7 @@ import emailConfigRoutes from './routes/emailConfigRoutes.js';
 
 // Express app
 const app = express();
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const isDev = NODE_ENV === 'development';
 
@@ -44,30 +44,31 @@ app.use(
   })
 );
 
-// CORS
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://127.0.0.1:3000'
-];
+ //CORS middleware
+ const allowedOrigins = [
+   'http://localhost:3000',
+   'http://127.0.0.1:3000'
+ ];
+ 
+ app.use(cors({
+   origin: (origin, callback) => {
+     if (!origin) return callback(null, true);
+     if (allowedOrigins.includes(origin)) {
+       callback(null, true);
+     } else {
+       console.warn(`CORS blocked from origin: ${origin}`);
+       callback(null, true);
+     }
+   },
+   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+   allowedHeaders: ['Content-Type', 'Authorization'],
+   credentials: true,
+   maxAge: 86400
+ }));
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn(`CORS blocked from origin: ${origin}`);
-      callback(null, true);
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-  maxAge: 86400
-}));
+// Middleware
+//app.use(express.json({ limit: '10mb' }));
 
-// Request body parsing
-app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Logging
@@ -105,7 +106,7 @@ const apiLimiter = rateLimit({
 // Database Connection
 // =========================================================
 
-const MONGODB_URI = 'mongodb://localhost:27017/7sundaysacademy';
+const MONGODB_URI = 'mongodb+srv://andreafarneti98:Rkthub100!*@cluster0.gicdmgw.mongodb.net/7sundaysacademy?retryWrites=true&w=majority';
 const MONGODB_OPTIONS = {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -116,7 +117,7 @@ const connectWithRetry = async (retryCount = 0, maxRetries = 5) => {
   try {
     console.log(`Connecting to MongoDB (attempt ${retryCount + 1}/${maxRetries})...`);
    await mongoose.connect(MONGODB_URI, MONGODB_OPTIONS);
-    console.log('MongoDB connection established successfully');
+    console.log('MongoDB connection established successfully'); 
   } catch (err) {
     console.error(`Database connection error: ${err.message}`);
     if (retryCount < maxRetries) {
@@ -145,13 +146,13 @@ connectWithRetry();
 // Routes
 // =========================================================
 
-app.use('/api/', apiLimiter);
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/courses', courseRoutes);
-app.use('/api/lessons', lessonRoutes);
-app.use('/api/tests', testRoutes);
-app.use('/api/networking', networkingRoutes);
+//app.use('/api/', apiLimiter);
+//app.use('/api/auth', authRoutes);
+//app.use('/api/users', userRoutes);
+//app.use('/api/courses', courseRoutes);
+//app.use('/api/lessons', lessonRoutes);
+//app.use('/api/tests', testRoutes);
+//app.use('/api/networking', networkingRoutes);
 
 // =========================================================
 // Public Routes
@@ -246,6 +247,7 @@ app.use((err, req, res, next) => {
 
 const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log('Server started');
   console.log(`Environment: ${NODE_ENV}`);
   console.log(`URL: http://localhost:${PORT}`);
 });
