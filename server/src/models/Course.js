@@ -8,6 +8,11 @@ const courseSchema = new mongoose.Schema(
       trim: true,
       maxlength: [100, 'Il titolo non può superare i 100 caratteri'],
     },
+    subtitle: {
+      type: String,
+      trim: true,
+      maxlength: [200, 'Il sottotitolo non può superare i 200 caratteri'],
+    },
     description: {
       type: String,
       required: [true, 'La descrizione del corso è obbligatoria'],
@@ -30,9 +35,29 @@ const courseSchema = new mongoose.Schema(
       type: String,
       required: [true, 'La categoria del corso è obbligatoria'],
     },
+    modules: [{
+      title: {
+        type: String,
+        required: [true, 'Il titolo del modulo è obbligatorio'],
+      },
+      description: {
+        type: String,
+      },
+      order: {
+        type: Number,
+        default: 0,
+      },
+      lessons: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Lesson',
+      }],
+    }],
     isPublished: {
       type: Boolean,
       default: false,
+    },
+    publishedAt: {
+      type: Date,
     },
     instructor: {
       type: mongoose.Schema.Types.ObjectId,
@@ -42,14 +67,12 @@ const courseSchema = new mongoose.Schema(
     lessons: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Lesson',
-      required: [true, "L'istruttore del corso è obbligatorio"],
+    }],
+    enrolledCount: {
+      type: Number,
+      default: 0,
     },
-  ],
-  enrolledCount: {
-    type: Number,
-    default: 0,
-    },
-  completionRate: {
+    completionRate: {
       type: Number,
       default: 0,
     },
@@ -58,20 +81,64 @@ const courseSchema = new mongoose.Schema(
       default: 0,
       min: [0, 'La valutazione minima è 0'],
       max: [5, 'La valutazione massima è 5'],
-      set: val => Math.round(val * 10) / 10, // Arrotonda a 1 decimale
+      set: val => Math.round(val * 10) / 10,
     },
     ratingsCount: {
       type: Number,
       default: 0,
     },
     tags: [String],
-    requirements: [String],
-    objectives: [String],
+    requirements: [{
+      title: {
+        type: String,
+        required: true,
+      },
+      description: {
+        type: String,
+      }
+    }],
+    objectives: [{
+      title: {
+        type: String,
+        required: true,
+      },
+      description: {
+        type: String,
+      }
+    }],
     price: {
       type: Number,
       required: [true, 'Il prezzo del corso è obbligatorio'],
       min: [0, 'Il prezzo non può essere negativo'],
     },
+    discountPrice: {
+      type: Number,
+      min: [0, 'Il prezzo scontato non può essere negativo'],
+      validate: {
+        validator: function(value) {
+          return !value || value <= this.price;
+        },
+        message: 'Il prezzo scontato deve essere minore o uguale al prezzo originale'
+      }
+    },
+    supportMaterials: [{
+      title: {
+        type: String,
+        required: true,
+      },
+      description: {
+        type: String,
+      },
+      url: {
+        type: String,
+        required: true,
+      },
+      type: {
+        type: String,
+        enum: ['pdf', 'video', 'link', 'altro'],
+        default: 'altro',
+      }
+    }],
     stripeProductId: {
       type: String,
       unique: true,

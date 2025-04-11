@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
 import axios from 'axios';
+import { FiUsers, FiBook, FiDollarSign, FiTrendingUp } from 'react-icons/fi';
 
 // Componenti
 import AdminLayout from '@/components/layout/AdminLayout';
@@ -24,12 +25,40 @@ interface CourseCompletionStats {
   completionRate: number;
 }
 
-export default function AdminStats() {
+interface Stats {
+  totalUsers: number;
+  totalCourses: number;
+  totalRevenue: number;
+  activeSubscriptions: number;
+  recentEnrollments: Array<{
+    userId: string;
+    courseId: string;
+    date: string;
+    userName: string;
+    courseName: string;
+  }>;
+  popularCourses: Array<{
+    id: string;
+    name: string;
+    enrollments: number;
+    revenue: number;
+  }>;
+}
+
+const StatsPage: React.FC = () => {
   const { user, isAuthenticated, loading } = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [monthlyStats, setMonthlyStats] = useState<MonthlyStats[]>([]);
   const [courseCompletionStats, setCourseCompletionStats] = useState<CourseCompletionStats[]>([]);
+  const [stats, setStats] = useState<Stats>({
+    totalUsers: 0,
+    totalCourses: 0,
+    totalRevenue: 0,
+    activeSubscriptions: 0,
+    recentEnrollments: [],
+    popularCourses: []
+  });
 
   // Reindirizza alla pagina di login se l'utente non è autenticato o non è admin
   useEffect(() => {
@@ -82,6 +111,29 @@ export default function AdminStats() {
     }
   }, [isAuthenticated, user]);
 
+  useEffect(() => {
+    const fetchAdminStats = async () => {
+      try {
+        const response = await axios.get('/api/admin/stats');
+        setStats(response.data);
+      } catch (error) {
+        console.error('Errore nel caricamento delle statistiche:', error);
+      }
+    };
+
+    if (isAuthenticated && user?.role === 'admin') {
+      fetchAdminStats();
+    }
+  }, [isAuthenticated, user]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
     <AdminLayout>
       <Head>
@@ -94,115 +146,129 @@ export default function AdminStats() {
           Panoramica delle statistiche e delle metriche della piattaforma
         </p>
 
-        {/* Statistiche generali */}
-        <div className="mt-6">
-          <h2 className="text-lg font-medium text-gray-900">Panoramica</h2>
-          <AdminStatsOverview className="mt-3" />
-        </div>
-
-        {/* Grafici statistiche mensili */}
-        <div className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900">Andamento Mensile</h2>
-          <div className="mt-3 bg-white shadow rounded-lg p-6">
-            {isLoading ? (
-              <div className="animate-pulse h-80 bg-gray-200 rounded"></div>
-            ) : (
-              <div className="h-80">
-                {/* In una implementazione reale, qui ci sarebbe un grafico */}
-                <div className="flex h-full items-end">
-                  {monthlyStats.map((stat, index) => (
-                    <div key={index} className="flex-1 flex flex-col items-center">
-                      <div className="w-full flex justify-around">
-                        <div className="w-4 bg-blue-500 rounded-t" style={{ height: `${stat.users * 2}px` }}></div>
-                        <div className="w-4 bg-green-500 rounded-t" style={{ height: `${stat.enrollments / 2}px` }}></div>
-                        <div className="w-4 bg-yellow-500 rounded-t" style={{ height: `${stat.completions * 2}px` }}></div>
-                        <div className="w-4 bg-purple-500 rounded-t" style={{ height: `${stat.testAttempts}px` }}></div>
-                      </div>
-                      <div className="mt-2 text-xs font-medium text-gray-500">{stat.month}</div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 flex justify-center space-x-6">
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 bg-blue-500 rounded mr-1"></div>
-                    <span className="text-xs text-gray-500">Nuovi Utenti</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 bg-green-500 rounded mr-1"></div>
-                    <span className="text-xs text-gray-500">Iscrizioni</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 bg-yellow-500 rounded mr-1"></div>
-                    <span className="text-xs text-gray-500">Completamenti</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 bg-purple-500 rounded mr-1"></div>
-                    <span className="text-xs text-gray-500">Tentativi Test</span>
-                  </div>
-                </div>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-500">Utenti Totali</p>
+                <h3 className="text-2xl font-bold">{stats.totalUsers}</h3>
               </div>
-            )}
+              <FiUsers className="w-8 h-8 text-blue-500" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-500">Corsi Totali</p>
+                <h3 className="text-2xl font-bold">{stats.totalCourses}</h3>
+              </div>
+              <FiBook className="w-8 h-8 text-green-500" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-500">Ricavi Totali</p>
+                <h3 className="text-2xl font-bold">€{stats.totalRevenue.toFixed(2)}</h3>
+              </div>
+              <FiDollarSign className="w-8 h-8 text-yellow-500" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-500">Iscrizioni Attive</p>
+                <h3 className="text-2xl font-bold">{stats.activeSubscriptions}</h3>
+              </div>
+              <FiTrendingUp className="w-8 h-8 text-purple-500" />
+            </div>
           </div>
         </div>
 
-        {/* Tabella completamento corsi */}
-        <div className="mt-8">
-          <h2 className="text-lg font-medium text-gray-900">Completamento Corsi</h2>
-          <div className="mt-3 bg-white shadow rounded-lg overflow-hidden">
-            {isLoading ? (
-              <div className="animate-pulse p-6 space-y-4">
-                <div className="h-6 bg-gray-200 rounded w-full"></div>
-                <div className="h-6 bg-gray-200 rounded w-full"></div>
-                <div className="h-6 bg-gray-200 rounded w-full"></div>
-                <div className="h-6 bg-gray-200 rounded w-full"></div>
-                <div className="h-6 bg-gray-200 rounded w-full"></div>
-              </div>
-            ) : (
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Corso
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Iscrizioni
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Completamenti
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tasso di Completamento
-                    </th>
+        {/* Recent Enrollments */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4">Iscrizioni Recenti</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Utente
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Corso
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Data
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {stats.recentEnrollments.map((enrollment, index) => (
+                  <tr key={index}>
+                    <td className="px-6 py-4 whitespace-nowrap">{enrollment.userName}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{enrollment.courseName}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {new Date(enrollment.date).toLocaleDateString()}
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {courseCompletionStats.map((course, index) => (
-                    <tr key={index}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {course.courseName}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {course.enrollments}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {course.completions}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div className="flex items-center">
-                          <span className="mr-2">{course.completionRate.toFixed(1)}%</span>
-                          <div className="w-24 bg-gray-200 rounded-full h-2.5">
-                            <div className="bg-primary-600 h-2.5 rounded-full" style={{ width: `${course.completionRate}%` }}></div>
-                          </div>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                ))}
+                {stats.recentEnrollments.length === 0 && (
+                  <tr>
+                    <td colSpan={3} className="px-6 py-4 text-center text-gray-500">
+                      Nessuna iscrizione recente
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Popular Courses */}
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold mb-4">Corsi Popolari</h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Corso
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Iscrizioni
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Ricavi
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {stats.popularCourses.map((course, index) => (
+                  <tr key={index}>
+                    <td className="px-6 py-4 whitespace-nowrap">{course.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{course.enrollments}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">€{course.revenue.toFixed(2)}</td>
+                  </tr>
+                ))}
+                {stats.popularCourses.length === 0 && (
+                  <tr>
+                    <td colSpan={3} className="px-6 py-4 text-center text-gray-500">
+                      Nessun corso disponibile
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     </AdminLayout>
   );
-}
+};
+
+export default StatsPage;

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 interface Course {
   _id: string;
@@ -18,14 +19,12 @@ const useCourses = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch('/api/courses');
-        if (!response.ok) {
-          throw new Error('Failed to fetch courses');
-        }
-        const data = await response.json();
-        setCourses(data);
+        const token = localStorage.getItem('token');
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const response = await axios.get('/api/courses', { headers });
+        setCourses(response.data.data.courses);
       } catch (err: any) {
-        setError(err.message);
+        setError(err.response?.data?.message || err.message);
       } finally {
         setIsLoading(false);
       }
@@ -38,20 +37,12 @@ const useCourses = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/courses', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(courseData),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to create course');
-      }
-      const data = await response.json();
-      setCourses([...courses, data]);
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await axios.post('/api/courses', courseData, { headers });
+      setCourses([...courses, response.data.data.course]);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message);
     } finally {
       setIsLoading(false);
     }
@@ -61,20 +52,12 @@ const useCourses = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/courses/${courseId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(courseData),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to update course');
-      }
-      const data = await response.json();
-      setCourses(courses.map((course) => (course._id === courseId ? data : course)));
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await axios.patch(`/api/courses/${courseId}`, courseData, { headers });
+      setCourses(courses.map((course) => (course._id === courseId ? response.data.data.course : course)));
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message);
     } finally {
       setIsLoading(false);
     }
@@ -84,15 +67,12 @@ const useCourses = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/courses/${courseId}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to delete course');
-      }
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      await axios.delete(`/api/courses/${courseId}`, { headers });
       setCourses(courses.filter((course) => course._id !== courseId));
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message);
     } finally {
       setIsLoading(false);
     }

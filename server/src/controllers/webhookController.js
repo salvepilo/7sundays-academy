@@ -1,6 +1,8 @@
 import stripe from '../config/stripe.js';
 import Course from '../models/Course.js';
 import User from '../models/User.js';
+import stripeLogger from '../utils/stripeLogger.js';
+import stripeRetryHandler from '../utils/stripeRetryHandler.js';
 
 // Gestione degli eventi webhook di Stripe
 export const handleStripeWebhook = async (req, res) => {
@@ -19,26 +21,44 @@ export const handleStripeWebhook = async (req, res) => {
       process.env.STRIPE_WEBHOOK_SECRET
     );
 
+    // Log dell'evento webhook
+    await stripeLogger.logWebhookEvent(event);
+
     // Gestione degli eventi di pagamento
     switch (event.type) {
       case 'checkout.session.completed':
         const session = event.data.object;
         await handleSuccessfulPayment(session);
+        await stripeLogger.logPaymentSuccess(session);
         break;
 
       case 'payment_intent.succeeded':
         const paymentIntent = event.data.object;
-        console.log('PaymentIntent completato:', paymentIntent.id);
+        await stripeLogger.logTransaction('PAYMENT_INTENT_SUCCESS', {
+          paymentIntentId: paymentIntent.id,
+          amount: paymentIntent.amount,
+          status: paymentIntent.status
+        });
         break;
 
       case 'payment_intent.payment_failed':
         const failedPayment = event.data.object;
-        console.error('Pagamento fallito:', failedPayment.id);
-        // Implementa la logica per gestire i pagamenti falliti
+        await stripeLogger.logPaymentFailure(failedPayment, failedPayment.id);
+        // Gestione automatica dei retry per i pagamenti falliti
+        const retryResult = await stripeRetryHandler.handleFailedPayment(failedPayment.id);
+        if (retryResult.success) {
+          await stripeLogger.logTransaction('PAYMENT_RETRY_SUCCESS', {
+            paymentIntentId: failedPayment.id,
+            retryResult
+          });
+        }
         break;
 
       default:
-        console.log(`Evento non gestito: ${event.type}`);
+        await stripeLogger.logTransaction('UNHANDLED_EVENT', {
+          type: event.type,
+          eventId: event.id
+        });
     }
 
     res.json({ received: true });

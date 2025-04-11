@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Carica le variabili d'ambiente dal file .env
-dotenv.config({ path: '/home/user/7sundays-academy/server/.env' });
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 // Verifica che JWT_SECRET sia caricato correttamente
 if (!process.env.JWT_SECRET) {
@@ -16,9 +16,11 @@ if (!process.env.JWT_SECRET) {
 }
 
 // Verifica che le chiavi di Stripe siano caricate correttamente
-// Verifica che le chiavi di Stripe siano caricate correttamente
 if (!process.env.STRIPE_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
-  console.warn('ATTENZIONE: Le chiavi di Stripe non sono configurate. Alcune funzionalità potrebbero non essere disponibili.');
+  console.warn('ATTENZIONE: Le chiavi di Stripe non sono configurate. Le funzionalità di pagamento non saranno disponibili.');
+  // Non facciamo crashare l'app, ma impostiamo le variabili a stringhe vuote
+  process.env.STRIPE_KEY = '';
+  process.env.STRIPE_WEBHOOK_SECRET = '';
 }
 
 import express from 'express';
@@ -43,6 +45,10 @@ import lessonRoutes from './routes/lessonRoutes.js';
 import networkingRoutes from './routes/networkingRoutes.js';
 import emailConfigRoutes from './routes/emailConfigRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+
+// Importa lo script di inizializzazione admin
+import './scripts/initAdmin.js';
 
 // Express app
 const app = express();
@@ -176,6 +182,7 @@ app.use('/api/tests', testRoutes);
 app.use('/api/networking', networkingRoutes);
 app.use('/api', emailConfigRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/admin', adminRoutes);
 // =========================================================
 // Public Routes
 // =========================================================

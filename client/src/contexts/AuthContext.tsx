@@ -6,6 +6,9 @@ import jwt_decode from 'jwt-decode';
 // URL base del server
 const API_BASE_URL = 'http://localhost:5001';
 
+// Configura l'URL base per axios
+axios.defaults.baseURL = API_BASE_URL;
+
 interface User {
   id: string;
   email: string;

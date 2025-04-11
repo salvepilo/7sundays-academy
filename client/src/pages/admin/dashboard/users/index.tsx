@@ -2,23 +2,19 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
+import { FiEdit2, FiTrash2, FiUserPlus } from 'react-icons/fi';
 
 // Componenti
 import AdminLayout from '@/components/layout/AdminLayout';
 
 // Tipi
 interface User {
-  id: string;
+  _id: string;
   name: string;
   email: string;
-  role: 'student' | 'admin' | 'instructor';
-  avatar?: string;
-  joinedAt: string;
-  lastLogin?: string;
-  status: 'active' | 'inactive' | 'suspended';
-  completedCourses: number;
-  completedTests: number;
-  averageScore: number;
+  role: string;
+  createdAt: string;
+  enrolledCourses: number;
 }
 
 export default function AdminUsers() {
@@ -26,9 +22,9 @@ export default function AdminUsers() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
 
@@ -47,93 +43,13 @@ export default function AdminUsers() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        // In una implementazione reale, questi dati verrebbero dal backend
-        // Qui utilizziamo dati di esempio
-        const mockUsers: User[] = [
-          {
-            id: '1',
-            name: 'Mario Rossi',
-            email: 'mario.rossi@example.com',
-            role: 'student',
-            avatar: '/images/avatars/user1.jpg',
-            joinedAt: '2023-06-15T10:30:00Z',
-            lastLogin: '2023-08-20T14:45:00Z',
-            status: 'active',
-            completedCourses: 3,
-            completedTests: 8,
-            averageScore: 85,
-          },
-          {
-            id: '2',
-            name: 'Laura Bianchi',
-            email: 'laura.bianchi@example.com',
-            role: 'instructor',
-            avatar: '/images/avatars/user2.jpg',
-            joinedAt: '2023-05-20T09:15:00Z',
-            lastLogin: '2023-08-19T11:30:00Z',
-            status: 'active',
-            completedCourses: 0,
-            completedTests: 0,
-            averageScore: 0,
-          },
-          {
-            id: '3',
-            name: 'Giuseppe Verdi',
-            email: 'giuseppe.verdi@example.com',
-            role: 'student',
-            avatar: '/images/avatars/user3.jpg',
-            joinedAt: '2023-07-10T13:45:00Z',
-            lastLogin: '2023-08-15T16:20:00Z',
-            status: 'inactive',
-            completedCourses: 1,
-            completedTests: 2,
-            averageScore: 70,
-          },
-          {
-            id: '4',
-            name: 'Francesca Neri',
-            email: 'francesca.neri@example.com',
-            role: 'student',
-            avatar: '/images/avatars/user4.jpg',
-            joinedAt: '2023-08-01T11:00:00Z',
-            lastLogin: '2023-08-18T09:30:00Z',
-            status: 'active',
-            completedCourses: 2,
-            completedTests: 5,
-            averageScore: 92,
-          },
-          {
-            id: '5',
-            name: 'Admin Principale',
-            email: 'admin@7sundays.com',
-            role: 'admin',
-            avatar: '/images/avatars/admin.jpg',
-            joinedAt: '2023-01-01T00:00:00Z',
-            lastLogin: '2023-08-20T08:15:00Z',
-            status: 'active',
-            completedCourses: 0,
-            completedTests: 0,
-            averageScore: 0,
-          },
-          {
-            id: '6',
-            name: 'Roberto Marini',
-            email: 'roberto.marini@example.com',
-            role: 'student',
-            avatar: '/images/avatars/user5.jpg',
-            joinedAt: '2023-07-25T15:45:00Z',
-            lastLogin: '2023-08-10T10:15:00Z',
-            status: 'suspended',
-            completedCourses: 0,
-            completedTests: 1,
-            averageScore: 45,
-          },
-        ];
-
-        setUsers(mockUsers);
-        setIsLoading(false);
+        const response = await fetch(`/api/admin/users?page=${currentPage}&search=${searchTerm}`);
+        const data = await response.json();
+        setUsers(data.users);
+        setTotalPages(Math.ceil(data.total / 10));
       } catch (error) {
         console.error('Errore nel caricamento degli utenti:', error);
+      } finally {
         setIsLoading(false);
       }
     };
@@ -141,66 +57,18 @@ export default function AdminUsers() {
     if (isAuthenticated && user?.role === 'admin') {
       fetchUsers();
     }
-  }, [isAuthenticated, user]);
-
-  // Filtra gli utenti in base ai criteri di ricerca
-  const filteredUsers = users.filter(u => {
-    const matchesSearch = searchQuery === '' || 
-      u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesRole = roleFilter === 'all' || u.role === roleFilter;
-    const matchesStatus = statusFilter === 'all' || u.status === statusFilter;
-    
-    return matchesSearch && matchesRole && matchesStatus;
-  });
-
-  // Apre il modal con i dettagli dell'utente
-  const handleViewUser = (user: User) => {
-    setSelectedUser(user);
-    setShowUserModal(true);
-  };
-
-  // Cambia lo stato di un utente
-  const handleChangeStatus = (userId: string, newStatus: 'active' | 'inactive' | 'suspended') => {
-    // In una implementazione reale, questa operazione verrebbe eseguita tramite API
-    setUsers(prevUsers => 
-      prevUsers.map(u => 
-        u.id === userId ? { ...u, status: newStatus } : u
-      )
-    );
-
-    // Se l'utente è attualmente selezionato, aggiorna anche quello
-    if (selectedUser && selectedUser.id === userId) {
-      setSelectedUser({ ...selectedUser, status: newStatus });
-    }
-  };
-
-  // Cambia il ruolo di un utente
-  const handleChangeRole = (userId: string, newRole: 'student' | 'admin' | 'instructor') => {
-    // In una implementazione reale, questa operazione verrebbe eseguita tramite API
-    setUsers(prevUsers => 
-      prevUsers.map(u => 
-        u.id === userId ? { ...u, role: newRole } : u
-      )
-    );
-
-    // Se l'utente è attualmente selezionato, aggiorna anche quello
-    if (selectedUser && selectedUser.id === userId) {
-      setSelectedUser({ ...selectedUser, role: newRole });
-    }
-  };
+  }, [isAuthenticated, user, currentPage, searchTerm]);
 
   // Elimina un utente
-  const handleDeleteUser = (userId: string) => {
-    if (confirm('Sei sicuro di voler eliminare questo utente? Questa azione non può essere annullata.')) {
-      // In una implementazione reale, questa operazione verrebbe eseguita tramite API
-      setUsers(prevUsers => prevUsers.filter(u => u.id !== userId));
-      
-      // Se l'utente è attualmente selezionato, chiudi il modal
-      if (selectedUser && selectedUser.id === userId) {
-        setShowUserModal(false);
-        setSelectedUser(null);
+  const handleDeleteUser = async (userId: string) => {
+    if (window.confirm('Sei sicuro di voler eliminare questo utente?')) {
+      try {
+        await fetch(`/api/admin/users/${userId}`, {
+          method: 'DELETE',
+        });
+        setUsers(users.filter(user => user._id !== userId));
+      } catch (error) {
+        console.error('Errore nell\'eliminazione dell\'utente:', error);
       }
     }
   };
@@ -227,6 +95,16 @@ export default function AdminUsers() {
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-8">Gestione Utenti</h1>
 
+        <div className="flex justify-between items-center mb-6">
+          <button
+            onClick={() => setShowUserModal(true)}
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            <FiUserPlus className="mr-2" />
+            Nuovo Utente
+          </button>
+        </div>
+
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6">
             <h2 className="text-xl font-semibold">Filtri</h2>
@@ -236,33 +114,10 @@ export default function AdminUsers() {
                   type="text"
                   placeholder="Cerca utenti..."
                   className="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 absolute right-3 top-2.5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                </svg>
               </div>
-              <select
-                className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                value={roleFilter}
-                onChange={(e) => setRoleFilter(e.target.value)}
-              >
-                <option value="all">Tutti i ruoli</option>
-                <option value="student">Studenti</option>
-                <option value="instructor">Istruttori</option>
-                <option value="admin">Amministratori</option>
-              </select>
-              <select
-                className="w-full md:w-auto px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <option value="all">Tutti gli stati</option>
-                <option value="active">Attivi</option>
-                <option value="inactive">Inattivi</option>
-                <option value="suspended">Sospesi</option>
-              </select>
             </div>
           </div>
 
@@ -270,25 +125,25 @@ export default function AdminUsers() {
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
             </div>
-          ) : filteredUsers.length > 0 ? (
+          ) : users.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Utente
+                      Nome
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Email
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Ruolo
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Stato
+                      Data Registrazione
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Iscritto il
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Ultimo accesso
+                      Corsi Iscritti
                     </th>
                     <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Azioni
@@ -296,17 +151,10 @@ export default function AdminUsers() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50">
+                  {users.map((user) => (
+                    <tr key={user._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10">
-                            <img 
-                              className="h-10 w-10 rounded-full object-cover" 
-                              src={user.avatar || '/images/avatars/default.jpg'} 
-                              alt={user.name} 
-                            />
-                          </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">{user.name}</div>
                             <div className="text-sm text-gray-500">{user.email}</div>
@@ -315,48 +163,34 @@ export default function AdminUsers() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                          ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 
-                            user.role === 'instructor' ? 'bg-blue-100 text-blue-800' : 
-                            'bg-green-100 text-green-800'}`}>
-                          {user.role === 'admin' ? 'Amministratore' : 
-                            user.role === 'instructor' ? 'Istruttore' : 'Studente'}
+                          ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>
+                          {user.role}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                          ${user.status === 'active' ? 'bg-green-100 text-green-800' : 
-                            user.status === 'inactive' ? 'bg-gray-100 text-gray-800' : 
-                            'bg-red-100 text-red-800'}`}>
-                          {user.status === 'active' ? 'Attivo' : 
-                            user.status === 'inactive' ? 'Inattivo' : 'Sospeso'}
-                        </span>
+                        {formatDate(user.createdAt)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDate(user.joinedAt)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {formatDate(user.lastLogin)}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {user.enrolledCourses}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end space-x-2">
                           <button
-                            onClick={() => handleViewUser(user)}
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setShowUserModal(true);
+                            }}
                             className="text-indigo-600 hover:text-indigo-900"
-                            title="Visualizza dettagli"
+                            title="Modifica utente"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                              <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                            </svg>
+                            <FiEdit2 />
                           </button>
                           <button
-                            onClick={() => handleDeleteUser(user.id)}
+                            onClick={() => handleDeleteUser(user._id)}
                             className="text-red-600 hover:text-red-900"
                             title="Elimina utente"
                           >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
+                            <FiTrash2 />
                           </button>
                         </div>
                       </td>
@@ -370,6 +204,39 @@ export default function AdminUsers() {
               Nessun utente trovato con i filtri selezionati. Prova a modificare i criteri di ricerca.
             </div>
           )}
+        </div>
+
+        {/* Pagination */}
+        <div className="mt-6 flex justify-center">
+          <nav className="flex space-x-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 rounded-lg bg-gray-100 disabled:opacity-50"
+            >
+              Precedente
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`px-3 py-1 rounded-lg ${
+                  currentPage === page
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 rounded-lg bg-gray-100 disabled:opacity-50"
+            >
+              Successivo
+            </button>
+          </nav>
         </div>
       </div>
 
@@ -407,13 +274,6 @@ export default function AdminUsers() {
                       {selectedUser.role === 'admin' ? 'Amministratore' : 
                         selectedUser.role === 'instructor' ? 'Istruttore' : 'Studente'}
                     </span>
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full 
-                      ${selectedUser.status === 'active' ? 'bg-green-100 text-green-800' : 
-                        selectedUser.status === 'inactive' ? 'bg-gray-100 text-gray-800' : 
-                        'bg-red-100 text-red-800'}`}>
-                      {selectedUser.status === 'active' ? 'Attivo' : 
-                        selectedUser.status === 'inactive' ? 'Inattivo' : 'Sospeso'}
-                    </span>
                   </div>
                 </div>
               </div>
@@ -424,15 +284,11 @@ export default function AdminUsers() {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-gray-600">ID:</span>
-                      <span className="font-medium">{selectedUser.id}</span>
+                      <span className="font-medium">{selectedUser._id}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Iscritto il:</span>
-                      <span className="font-medium">{formatDate(selectedUser.joinedAt)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Ultimo accesso:</span>
-                      <span className="font-medium">{formatDate(selectedUser.lastLogin)}</span>
+                      <span className="text-gray-600">Data Registrazione:</span>
+                      <span className="font-medium">{formatDate(selectedUser.createdAt)}</span>
                     </div>
                   </div>
                 </div>
@@ -441,16 +297,8 @@ export default function AdminUsers() {
                   <h3 className="text-lg font-semibold text-gray-700 mb-2">Statistiche</h3>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Corsi completati:</span>
-                      <span className="font-medium">{selectedUser.completedCourses}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Test completati:</span>
-                      <span className="font-medium">{selectedUser.completedTests}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Punteggio medio:</span>
-                      <span className="font-medium">{selectedUser.averageScore}%</span>
+                      <span className="text-gray-600">Corsi Iscritti:</span>
+                      <span className="font-medium">{selectedUser.enrolledCourses}</span>
                     </div>
                   </div>
                 </div>
@@ -465,24 +313,18 @@ export default function AdminUsers() {
                     <select
                       className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                       value={selectedUser.role}
-                      onChange={(e) => handleChangeRole(selectedUser.id, e.target.value as 'student' | 'admin' | 'instructor')}
+                      onChange={(e) => {
+                        // In una implementazione reale, questa operazione verrebbe eseguita tramite API
+                        setUsers(prevUsers => 
+                          prevUsers.map(u => 
+                            u._id === selectedUser._id ? { ...u, role: e.target.value } : u
+                          )
+                        );
+                      }}
                     >
                       <option value="student">Studente</option>
                       <option value="instructor">Istruttore</option>
                       <option value="admin">Amministratore</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Cambia Stato</label>
-                    <select
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      value={selectedUser.status}
-                      onChange={(e) => handleChangeStatus(selectedUser.id, e.target.value as 'active' | 'inactive' | 'suspended')}
-                    >
-                      <option value="active">Attivo</option>
-                      <option value="inactive">Inattivo</option>
-                      <option value="suspended">Sospeso</option>
                     </select>
                   </div>
                 </div>
@@ -495,7 +337,7 @@ export default function AdminUsers() {
                     Chiudi
                   </button>
                   <button
-                    onClick={() => handleDeleteUser(selectedUser.id)}
+                    onClick={() => handleDeleteUser(selectedUser._id)}
                     className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md transition duration-300"
                   >
                     Elimina Utente
