@@ -36,14 +36,13 @@ import * as testController from './controllers/testController.js';
 
 // Import routes
 import authRoutes from './routes/authRoutes.js';
-
 import userRoutes from './routes/userRoutes.js';
 import courseRoutes from './routes/courseRoutes.js';
-
 import testRoutes from "./routes/testRoutes.js";
 import lessonRoutes from './routes/lessonRoutes.js';
 import networkingRoutes from './routes/networkingRoutes.js';
 import emailConfigRoutes from './routes/emailConfigRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
 
 // Express app
 const app = express();
@@ -164,6 +163,10 @@ connectWithRetry();
 // =========================================================
 // Routes
 // =========================================================
+// Configura il middleware raw per i webhook Stripe prima delle altre rotte
+app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
+
+// Rotte API con rate limiting
 app.use('/api/users', apiLimiter, userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -172,6 +175,7 @@ app.use('/api/lessons', lessonRoutes);
 app.use('/api/tests', testRoutes);
 app.use('/api/networking', networkingRoutes);
 app.use('/api', emailConfigRoutes);
+app.use('/api/payments', paymentRoutes);
 // =========================================================
 // Public Routes
 // =========================================================
