@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Carica le variabili d'ambiente dal file .env
-dotenv.config();
+dotenv.config({ path: '/home/user/7sundays-academy/server/.env' });
 
 // Verifica che JWT_SECRET sia caricato correttamente
 if (!process.env.JWT_SECRET) {
@@ -16,7 +16,8 @@ if (!process.env.JWT_SECRET) {
 }
 
 // Verifica che le chiavi di Stripe siano caricate correttamente
-if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
+// Verifica che le chiavi di Stripe siano caricate correttamente
+if (!process.env.STRIPE_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
   console.warn('ATTENZIONE: Le chiavi di Stripe non sono configurate. Alcune funzionalità potrebbero non essere disponibili.');
 }
 

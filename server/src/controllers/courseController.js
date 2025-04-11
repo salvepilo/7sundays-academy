@@ -1,10 +1,10 @@
+import { createStripeProduct, updateStripeProduct, archiveStripeProduct } from '../config/stripe.js';
 import Course from '../models/Course.js';
 import Lesson from '../models/Lesson.js';
 import User from '../models/User.js';
 import mongoose from 'mongoose';
-import { createStripeProduct, updateStripeProduct, archiveStripeProduct } from '../config/stripe.js';
 
-// Ottieni tutti i corsi (con filtri opzionali)
+
 export const getAllCourses = async (req, res) => {
   try {
     // Costruisci la query di filtro

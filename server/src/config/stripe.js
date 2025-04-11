@@ -1,14 +1,15 @@
 import Stripe from 'stripe';
 import dotenv from 'dotenv';
 
-dotenv.config();
+// Carica le variabili d'ambiente
+dotenv.config({ path: '/home/user/7sundays-academy/server/.env' });
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  console.error('ERRORE: STRIPE_SECRET_KEY non è definito nel file .env');
+if (!process.env.STRIPE_KEY) {
+  console.error('ERRORE: STRIPE_KEY non è definito nel file .env');
   process.exit(1);
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripe = new Stripe(process.env.STRIPE_KEY);
 
 // Funzione per creare un nuovo prodotto Stripe
 export const createStripeProduct = async (course) => {
