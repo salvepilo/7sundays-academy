@@ -183,11 +183,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      console.log('Invio richiesta di registrazione a:', `${API_BASE_URL}/api/auth/register`);
+      console.log('Invio richiesta di registrazione a:', `${API_BASE_URL}/api/auth/signup`);
       console.log('Dati:', { name, email, password: '***********' });
       
       // Usa l'URL completo
-      const response = await axios.post(`${API_BASE_URL}/api/auth/register`, { 
+      const response = await axios.post(`${API_BASE_URL}/api/auth/signup`, { 
         name, 
         email, 
         password 
