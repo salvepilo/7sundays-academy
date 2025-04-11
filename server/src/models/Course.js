@@ -67,6 +67,21 @@ const courseSchema = new mongoose.Schema(
     tags: [String],
     requirements: [String],
     objectives: [String],
+    price: {
+      type: Number,
+      required: [true, 'Il prezzo del corso è obbligatorio'],
+      min: [0, 'Il prezzo non può essere negativo'],
+    },
+    stripeProductId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    stripePriceId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
   },
   {
     timestamps: true,

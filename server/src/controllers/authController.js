@@ -6,8 +6,14 @@ import * as emailService from '../utils/emailService.js';
  
 // Funzione per generare il token JWT
 const signToken = (id) => {
+  // Verifica che JWT_SECRET sia disponibile
+  if (!process.env.JWT_SECRET) {
+    console.error('ERRORE: JWT_SECRET non è definito nel file .env');
+    throw new Error('JWT_SECRET non è definito');
+  }
+  
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN,
+    expiresIn: process.env.JWT_EXPIRES_IN || '90d',
   });
 };
 
@@ -31,7 +37,7 @@ export const signup = async (req, res, next) => {
     const { name, email, password, passwordConfirm } = req.body;
 
     // Verifica se l'utente esiste già
-    const existingUser = await User.default.findOne({ email });
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
         status: 'fail', 
@@ -75,7 +81,7 @@ export const login = async (req, res, next) => {
     }
 
     // Trova l'utente e seleziona esplicitamente il campo password
-    const user = await User.default.findOne({ email }).select('+password');
+    const user = await User.findOne({ email }).select('+password');
 
     // Verifica se l'utente esiste e la password è corretta
     if (!user || !(await user.correctPassword(password, user.password))) {
@@ -100,7 +106,7 @@ export const login = async (req, res, next) => {
 export const updatePassword = async (req, res, next) => {
   try {
     // 1) Ottieni l'utente dalla collezione
-    const user = await User.default.findById(req.user.id).select('+password');
+    const user = await User.findById(req.user.id).select('+password');
     
     // 2) Verifica se la password corrente è corretta 
     if (!(await user.correctPassword(req.body.currentPassword, user.password))) {
@@ -130,7 +136,7 @@ export const updatePassword = async (req, res, next) => {
 export const forgotPassword = async (req, res, next) => {
   try {
     // 1) Trova l'utente con l'email fornita
-    const user = await User.default.findOne({ email: req.body.email });
+    const user = await User.findOne({ email: req.body.email });
     if (!user) {
       return res.status(404).json({
         status: 'fail',
@@ -178,7 +184,7 @@ export const resetPassword = async (req, res, next) => {
   try {
     // 1) Ottieni l'utente in base al token 
     const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex'); 
-    const user = await User.default.findOne({ 
+    const user = await User.findOne({ 
       passwordResetToken: hashedToken, 
       passwordResetExpires: { $gt: Date.now() } 
     }); 
@@ -231,7 +237,7 @@ export const protect = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET); 
  
     // 3) Verifica se l'utente esiste ancora  
-    const currentUser = await User.default.findById(decoded.id); 
+    const currentUser = await User.findById(decoded.id); 
     if (!currentUser) { 
       return res.status(401).json({
         status: 'fail',
@@ -287,7 +293,7 @@ export const restrictTo = (...roles) => {
 // Ottieni i dati dell'utente corrente
 export const getMe = async (req, res, next) => {
   try {
-    const user = await User.default.findById(req.user.id);
+    const user = await User.findById(req.user.id);
      
     if (!user) {
       return res.status(404).json({

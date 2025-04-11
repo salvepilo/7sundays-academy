@@ -1,5 +1,19 @@
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Ottieni il percorso corrente del file
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Carica le variabili d'ambiente dal file .env nella directory principale del server
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+
+// Verifica che JWT_SECRET sia caricato correttamente
+if (!process.env.JWT_SECRET) {
+  console.error('ERRORE: JWT_SECRET non è definito nel file .env');
+  process.exit(1);
+}
 
 import express from 'express';
 import mongoose from 'mongoose';
@@ -7,7 +21,6 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
-import path from 'path';
 
 // Import controllers
 

@@ -576,7 +576,13 @@ const getCompletedLessonsCount = async (user, lessons) => {
 
 const generateSecureToken = (userId, lessonId) => {
   const jwt = require('jsonwebtoken');
-    return jwt.sign(
+  // Verifica che JWT_SECRET sia disponibile
+  if (!process.env.JWT_SECRET) {
+    console.error('ERRORE: JWT_SECRET non è definito');
+    throw new Error('JWT_SECRET non è definito');
+  }
+  
+  return jwt.sign(
     { userId, lessonId, timestamp: Date.now() },
     process.env.JWT_SECRET,
     { expiresIn: '1h' } 

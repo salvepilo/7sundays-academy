@@ -1,7 +1,8 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const asyncHandler = require('express-async-handler');
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
+import asyncHandler from 'express-async-handler';
 
+// Verifica che JWT_SECRET sia disponibile prima di verificare il token
 const protect = asyncHandler(async (req, res, next) => {
   let token;
 
@@ -17,6 +18,12 @@ const protect = asyncHandler(async (req, res, next) => {
   }
 
   try {
+    // Verifica che JWT_SECRET sia disponibile
+    if (!process.env.JWT_SECRET) {
+      console.error('ERRORE: JWT_SECRET non è definito nel file .env');
+      return res.status(500).json({ message: 'Errore di configurazione del server' });
+    }
+    
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);
 

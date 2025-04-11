@@ -190,7 +190,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await axios.post(`${API_BASE_URL}/api/auth/signup`, { 
         name, 
         email, 
-        password 
+        password,
+        passwordConfirm: password // Aggiungo passwordConfirm con lo stesso valore della password
       });
       
       console.log('Risposta registrazione:', response.data);

@@ -1,4 +1,4 @@
-import * as Test from '../models/Test.js';
+import Test from '../models/Test.js';
 import * as TestAttempt from '../models/TestAttempt.js';
 import * as User from '../models/User.js';
 import * as Course from '../models/Course.js';

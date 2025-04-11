@@ -2,6 +2,7 @@ import Course from '../models/Course.js';
 import Lesson from '../models/Lesson.js';
 import User from '../models/User.js';
 import mongoose from 'mongoose';
+import { createStripeProduct, updateStripeProduct, archiveStripeProduct } from '../config/stripe.js';
 
 // Ottieni tutti i corsi (con filtri opzionali)
 export const getAllCourses = async (req, res) => {
@@ -144,14 +145,30 @@ export const createCourse = async (req, res) => {
     // Imposta l'istruttore come l'utente corrente (admin)
     req.body = { title: name, instructor: req.user.id, ...otherData }
     
+    // Crea il corso nel database
     const newCourse = await Course.create(req.body);
 
-    res.status(201).json({  
-      status: 'success',
-      data: {
-        course: newCourse,
-      },
-    });
+    try {
+      // Crea il prodotto in Stripe
+      const { productId, priceId } = await createStripeProduct(newCourse);
+      
+      // Aggiorna il corso con gli ID di Stripe
+      newCourse.stripeProductId = productId;
+      newCourse.stripePriceId = priceId;
+      await newCourse.save();
+
+      res.status(201).json({  
+        status: 'success',
+        data: {
+          course: newCourse,
+        },
+      });
+    } catch (stripeErr) {
+      console.error('Errore nella creazione del prodotto Stripe:', stripeErr);
+      // Elimina il corso se la creazione del prodotto Stripe fallisce
+      await Course.findByIdAndDelete(newCourse._id);
+      throw new Error('Errore nella creazione del prodotto Stripe: ' + stripeErr.message);
+    }
   } catch (err) {
     console.error('Errore nella creazione del corso:', err);
     res.status(400).json({
@@ -165,10 +182,43 @@ export const createCourse = async (req, res) => {
 export const updateCourse = async (req, res) => {
   try {
     console.log('Received data for updating course:', req.body, 'course id:', req.params.id);
-    const course = await Course.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    
+    // Trova il corso prima dell'aggiornamento
+    const course = await Course.findById(req.params.id);
+    
+    if (!course) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Corso non trovato',
+      });
+    }
+
+    // Aggiorna il corso nel database
+    Object.assign(course, req.body);
+    
+    // Se il corso ha già un prodotto Stripe, aggiornalo
+    if (course.stripeProductId) {
+      try {
+        const stripeUpdate = await updateStripeProduct(course);
+        if (stripeUpdate && stripeUpdate.priceId) {
+          course.stripePriceId = stripeUpdate.priceId;
+        }
+      } catch (stripeError) {
+        console.error('Errore nell\'aggiornamento del prodotto Stripe:', stripeError);
+        // Continua con l'aggiornamento del corso anche se l'aggiornamento Stripe fallisce
+      }
+    } else if (course.price) {
+      // Se il corso non ha un prodotto Stripe ma ha un prezzo, crealo
+      try {
+        const { productId, priceId } = await createStripeProduct(course);
+        course.stripeProductId = productId;
+        course.stripePriceId = priceId;
+      } catch (stripeError) {
+        console.error('Errore nella creazione del prodotto Stripe:', stripeError);
+      }
+    }
+
+    await course.save();
 
     if (!course) {
       return res.status(404).json({
@@ -196,7 +246,25 @@ export const updateCourse = async (req, res) => {
 export const deleteCourse = async (req, res) => {
   try {
     const courseId = req.params.id;
-    const course = await Course.findByIdAndDelete(courseId);
+    const course = await Course.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Corso non trovato',
+      });
+    }
+
+    // Se il corso ha un prodotto Stripe, archivialo
+    if (course.stripeProductId) {
+      try {
+        await archiveStripeProduct(course.stripeProductId);
+      } catch (stripeError) {
+        console.error('Errore nell\'archiviazione del prodotto Stripe:', stripeError);
+      }
+    }
+
+    await Course.findByIdAndDelete(courseId);
 
     if (!course) {
       return res.status(404).json({
