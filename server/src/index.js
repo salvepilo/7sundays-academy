@@ -6,13 +6,16 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Carica le variabili d'ambiente dal file .env nella directory principale del server
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
+// Carica le variabili d'ambiente dal file .env nella directory del server
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-// Verifica che JWT_SECRET sia caricato correttamente
-if (!process.env.JWT_SECRET) {
-  console.error('ERRORE: JWT_SECRET non è definito nel file .env');
-  process.exit(1);
+// Verifica che le variabili d'ambiente necessarie siano caricate correttamente
+const requiredEnvVars = ['JWT_SECRET', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET'];
+for (const envVar of requiredEnvVars) {
+  if (!process.env[envVar]) {
+    console.error(`ERRORE: ${envVar} non è definito nel file .env`);
+    process.exit(1);
+  }
 }
 
 import express from 'express';
