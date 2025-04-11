@@ -1,8 +1,9 @@
 /**
  * Controller per la gestione delle configurazioni email SMTP
  * Gestisce le operazioni CRUD sulle configurazioni email e il test della connessione
+ *
  */
-import * as EmailConfig from '../models/EmailConfig.js';
+import EmailConfig from '../models/EmailConfig.js';
 import nodemailer from 'nodemailer';
 
 /**
@@ -16,8 +17,7 @@ export const getAllEmailConfigs = async (req, res) => {
 
     res.status(200).json({
       status: 'success',
-      results: configs.length,
-      data: { 
+      data: {
         configs,
       },
     });
@@ -48,7 +48,7 @@ export const getActiveEmailConfig = async (req, res) => {
 
     res.status(200).json({
       status: 'success',
-      data: { 
+      data: {
         config,
       },
     });
@@ -76,10 +76,9 @@ export const getEmailConfig = async (req, res) => {
         message: 'Configurazione email non trovata',
       });
     }
-
     res.status(200).json({
       status: 'success',
-      data: { 
+      data: {
         config,
       },
     });
@@ -110,7 +109,7 @@ export const createEmailConfig = async (req, res) => {
 
     res.status(201).json({
       status: 'success',
-      data: { 
+      data: {
         config: configResponse,
       },
     });
@@ -133,14 +132,10 @@ export const updateEmailConfig = async (req, res) => {
     // Aggiungi l'utente corrente come aggiornatore
     req.body.updatedBy = req.user.id;
 
-    const config = await EmailConfig.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
-    ).select('-auth.pass');
+    const config = await EmailConfig.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    }).select('-auth.pass');
 
     if (!config) {
       return res.status(404).json({
@@ -151,7 +146,7 @@ export const updateEmailConfig = async (req, res) => {
 
     res.status(200).json({
       status: 'success',
-      data: { 
+      data: {
         config,
       },
     });
@@ -193,9 +188,9 @@ export const deleteEmailConfig = async (req, res) => {
 
     await EmailConfig.findByIdAndDelete(req.params.id);
 
-    res.status(204).json({
+    res.status(200).json({
       status: 'success',
-      data: null,
+      message: 'Configurazione email eliminata con successo',
     });
   } catch (err) {
     console.error('Errore nell\'eliminazione della configurazione email:', err);
@@ -216,12 +211,12 @@ export const activateEmailConfig = async (req, res) => {
     // Aggiorna l'utente che ha fatto la modifica
     const config = await EmailConfig.findByIdAndUpdate(
       req.params.id,
-      { 
+      {
         isActive: true,
-        updatedBy: req.user.id 
+        updatedBy: req.user.id,
       },
       {
-        new: true, 
+        new: true,
         runValidators: true,
       }
     ).select('-auth.pass');
@@ -235,7 +230,7 @@ export const activateEmailConfig = async (req, res) => {
 
     res.status(200).json({
       status: 'success',
-      data: { 
+      data: {
         config,
       },
     });
@@ -254,70 +249,64 @@ export const activateEmailConfig = async (req, res) => {
  * @access Admin
  */
 export const testEmailConfig = async (req, res) => {
-  try {
-    const { host, port, secure, auth, testEmail } = req.body;
-
-    if (!host || !port || !auth || !auth.user || !auth.pass || !testEmail) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Dati di configurazione incompleti',
+    try {
+      const { host, port, secure, auth, testEmail } = req.body;
+  
+      if (!host || !port || !auth || !auth.user || !auth.pass || !testEmail) {
+        return res.status(400).json({
+          status: 'fail',
+          message: 'Dati di configurazione incompleti',
+        });
+      }
+  
+      // Crea un transporter temporaneo per il test
+      const transporter = nodemailer.createTransport({
+        host,
+        port,
+        secure: secure || false,
+        auth: {
+          user: auth.user,
+          pass: auth.pass,
+        },
+        tls: {
+          rejectUnauthorized: false, // Utile in ambiente di sviluppo
+        },
+      });
+  
+      // Verifica la connessione
+      await transporter.verify();
+  
+      // Invia un'email di test
+      await transporter.sendMail({
+        from: auth.user,
+        to: testEmail,
+        subject: 'Test configurazione email - 7Sundays Academy',
+        text: 'Questa è un\'email di test per verificare la configurazione SMTP.',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #3b82f6;">Test Configurazione Email</h2>
+            <p>Questa è un'email di test per verificare la configurazione SMTP.</p>
+            <p>Se stai ricevendo questa email, la configurazione è corretta!</p>
+            <div style="margin-top: 30px; padding: 20px; background-color: #f3f4f6; border-radius: 5px;">
+              <p style="margin: 0;">Configurazione testata:</p>
+              <ul>
+                <li>Host: ${host}</li>
+                <li>Porta: ${port}</li>
+                <li>Sicuro: ${secure ? 'Sì' : 'No'}</li>
+                <li>Utente: ${auth.user}</li>
+              </ul>
+            </div>
+            <p style="margin-top: 30px;">Il team di 7Sundays Academy</p>
+          </div>
+        `,
+      });
+      res.status(200).json({ status: 'success', message: 'OK' });
+  
+    } catch (err) {
+      console.error('Errore nel test della configurazione email:', err);
+      res.status(400).json({
+        status: 'error',
+        message: `Errore nel test della configurazione email: ${err.message}`,
       });
     }
-
-    // Crea un transporter temporaneo per il test
-    const transporter = nodemailer.createTransport({
-      host,
-      port, 
-      secure: secure || false,
-      auth: {
-        user: auth.user,
-        pass: auth.pass,
-      },
-      tls: {
-        rejectUnauthorized: false, // Utile in ambiente di sviluppo
-      },
-    });
-
-    // Verifica la connessione
-    await transporter.verify();
-
-    // Invia un'email di test
-    const result = await transporter.sendMail({
-      from: auth.user,
-      to: testEmail,
-      subject: 'Test configurazione email - 7Sundays Academy',
-      text: 'Questa è un\'email di test per verificare la configurazione SMTP.',
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #3b82f6;">Test Configurazione Email</h2>
-          <p>Questa è un'email di test per verificare la configurazione SMTP.</p>
-          <p>Se stai ricevendo questa email, la configurazione è corretta!</p>
-          <div style="margin-top: 30px; padding: 20px; background-color: #f3f4f6; border-radius: 5px;">
-            <p style="margin: 0;">Configurazione testata:</p>
-            <ul>
-              <li>Host: ${host}</li>
-              <li>Porta: ${port}</li>
-              <li>Sicuro: ${secure ? 'Sì' : 'No'}</li>
-              <li>Utente: ${auth.user}</li>
-            </ul>
-          </div>
-          <p style="margin-top: 30px;">Il team di 7Sundays Academy</p>
-        </div>
-      `,
-    });
-
-    res.status(200).json({
-      status: 'success',
-      message: 'Test email inviata con successo',
-      data: { 
-        messageId: result.messageId,
-      },
-    });
-  } catch (err) {
-    console.error('Errore nel test della configurazione email:', err);
-    res.status(400).json({
-      status: 'error',
-      message: `Errore nel test della configurazione email: ${err.message}`,
-    });
-  }
-};
+  };
