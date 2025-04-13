@@ -140,7 +140,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       setError(null);
       
-      // Usa l'URL completo
       const response = await axios.post(`${API_BASE_URL}/api/auth/login`, { 
         email, 
         password 
@@ -152,7 +151,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error('Token non trovato nella risposta');
       }
       
+      // Salva il token in localStorage
       localStorage.setItem('token', token);
+      
+      // Salva il token nei cookies
+      document.cookie = `token=${token}; path=/; max-age=86400`; // 24 ore
+      
       setUser(user);
       
       // Reindirizza in base al ruolo
@@ -164,16 +168,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (err: any) {
       console.error('Errore login:', err);
       
-      // Gestione dettagliata degli errori
       if (err.response) {
-        // La richiesta è stata effettuata e il server ha risposto con un codice di stato
-        // che non rientra nell'intervallo 2xx
         setError(err.response.data?.message || `Errore ${err.response.status}: ${err.response.statusText}`);
       } else if (err.request) {
-        // La richiesta è stata effettuata ma non è stata ricevuta alcuna risposta
         setError('Il server non risponde. Riprova più tardi.');
       } else {
-        // Si è verificato un errore durante l'impostazione della richiesta
         setError(err.message || 'Errore imprevisto durante il login');
       }
     } finally {
@@ -230,7 +229,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
+    // Rimuovi il token da localStorage
     localStorage.removeItem('token');
+    
+    // Rimuovi il token dai cookies
+    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC';
+    
     setUser(null);
     router.push('/');
   };

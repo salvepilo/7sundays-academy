@@ -59,4 +59,7 @@ const restrictTo = (...roles) => {
   };
 };
 
-export { protect, restrictTo };
+// Admin middleware
+const admin = restrictTo('admin');
+
+export { protect, restrictTo, admin };

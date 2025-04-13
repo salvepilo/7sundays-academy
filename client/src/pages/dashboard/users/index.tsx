@@ -7,7 +7,10 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
 // Componenti
-import AdminLayout from '@/components/layout/AdminLayout';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+
+// Mock data
+import { mockUsers } from '@/mock/users';
 
 // Tipi
 interface User {
@@ -20,7 +23,7 @@ interface User {
   avatar?: string;
 }
 
-export default function AdminUsers() {
+export default function UserDashboard() {
   const { user, isAuthenticated, loading } = useAuth();
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
@@ -30,44 +33,46 @@ export default function AdminUsers() {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
+  const [useMockData, setUseMockData] = useState(false);
 
-  // Reindirizza alla pagina di login se l'utente non è autenticato o non è admin
+  // Reindirizza alla pagina di login se l'utente non è autenticato
   useEffect(() => {
-    if (!loading) {
-      if (!isAuthenticated) {
-        router.push('/auth/login');
-      } else if (user?.role !== 'admin') {
-        router.push('/dashboard');
-      }
+    if (!loading && !isAuthenticated) {
+      router.push('/auth/login');
     }
-  }, [isAuthenticated, loading, router, user]);
+  }, [isAuthenticated, loading, router]);
 
   // Carica gli utenti
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get(`/api/admin/users?page=${currentPage}&search=${searchTerm}`);
+        const response = await axios.get(`/api/users?page=${currentPage}&search=${searchTerm}`);
         setUsers(response.data.users);
         setTotalPages(Math.ceil(response.data.total / 10));
+        setUseMockData(false);
       } catch (error) {
-        console.error('Errore nel caricamento degli utenti:', error);
-        toast.error('Errore nel caricamento degli utenti');
+        console.error('Errore nel caricamento degli utenti, usando dati mockup:', error);
+        setUsers(mockUsers);
+        setTotalPages(1);
+        setUseMockData(true);
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (isAuthenticated && user?.role === 'admin') {
+    if (isAuthenticated) {
       fetchUsers();
     }
-  }, [isAuthenticated, user, currentPage, searchTerm]);
+  }, [isAuthenticated, currentPage, searchTerm]);
 
   // Elimina un utente
   const handleDeleteUser = async (userId: string) => {
     if (window.confirm('Sei sicuro di voler eliminare questo utente?')) {
       try {
-        await axios.delete(`/api/admin/users/${userId}`);
+        if (!useMockData) {
+          await axios.delete(`/api/users/${userId}`);
+        }
         setUsers(users.filter(user => user._id !== userId));
         toast.success('Utente eliminato con successo');
       } catch (error) {
@@ -80,7 +85,9 @@ export default function AdminUsers() {
   // Aggiorna il ruolo di un utente
   const handleUpdateRole = async (userId: string, newRole: string) => {
     try {
-      await axios.patch(`/api/admin/users/${userId}`, { role: newRole });
+      if (!useMockData) {
+        await axios.patch(`/api/users/${userId}`, { role: newRole });
+      }
       setUsers(users.map(user => 
         user._id === userId ? { ...user, role: newRole } : user
       ));
@@ -101,18 +108,18 @@ export default function AdminUsers() {
 
   if (isLoading) {
     return (
-      <AdminLayout>
+      <DashboardLayout>
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
         </div>
-      </AdminLayout>
+      </DashboardLayout>
     );
   }
 
   return (
-    <AdminLayout>
+    <DashboardLayout>
       <Head>
-        <title>Gestione Utenti | 7Sundays Academy Admin</title>
+        <title>Gestione Utenti | 7Sundays Academy</title>
       </Head>
 
       <div className="py-6">
@@ -120,13 +127,21 @@ export default function AdminUsers() {
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-semibold text-gray-900">Gestione Utenti</h1>
             <button
-              onClick={() => router.push('/admin/dashboard/users/create')}
+              onClick={() => router.push('/dashboard/users/create')}
               className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
             >
               <FiUserPlus className="mr-2" />
               Nuovo Utente
             </button>
           </div>
+
+          {useMockData && (
+            <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+              <p className="text-yellow-700">
+                Attenzione: Stai utilizzando dati mockup perché l'API non è disponibile.
+              </p>
+            </div>
+          )}
 
           {/* Search Bar */}
           <div className="mb-6">
@@ -328,6 +343,6 @@ export default function AdminUsers() {
           </div>
         </div>
       )}
-    </AdminLayout>
+    </DashboardLayout>
   );
-}
+} 

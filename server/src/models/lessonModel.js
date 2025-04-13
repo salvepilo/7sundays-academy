@@ -50,35 +50,53 @@ const lessonSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: [true, 'La descrizione è obbligatoria']
+    default: ''
   },
-  course: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Course',
-    required: true
+  content: {
+    type: String,
+    default: ''
+  },
+  videoUrl: {
+    type: String,
+    default: ''
+  },
+  duration: {
+    type: Number,
+    default: 0
   },
   section: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Section',
-    required: true
+    required: [true, 'La sezione è obbligatoria']
   },
-  videoUrl: {
-    type: String
-  },
-  duration: {
-    type: Number, // in minutes
-    required: true
+  order: {
+    type: Number,
+    required: [true, 'L\'ordine è obbligatorio']
   },
   isFree: {
     type: Boolean,
     default: false
   },
-  resources: [resourceSchema],
-  quiz: [quizSchema],
-  order: {
-    type: Number,
-    required: true
+  isPublished: {
+    type: Boolean,
+    default: false
   },
+  resources: [{
+    type: {
+      type: String,
+      enum: ['pdf', 'link', 'code'],
+      required: [true, 'Il tipo di risorsa è obbligatorio']
+    },
+    title: {
+      type: String,
+      required: [true, 'Il titolo della risorsa è obbligatorio']
+    },
+    url: {
+      type: String,
+      required: [true, 'L\'URL della risorsa è obbligatorio']
+    }
+  }],
+  quiz: [quizSchema],
   status: {
     type: String,
     enum: ['draft', 'published', 'archived'],
@@ -127,6 +145,7 @@ lessonSchema.index({ course: 1, section: 1, order: 1 });
 lessonSchema.index({ status: 1 });
 lessonSchema.index({ isFree: 1 });
 
-const Lesson = mongoose.model('Lesson', lessonSchema);
+// Check if the model already exists
+const Lesson = mongoose.models.Lesson || mongoose.model('Lesson', lessonSchema);
 
 export default Lesson; 

@@ -75,30 +75,20 @@ const StatsPage: React.FC = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // In una implementazione reale, questi dati verrebbero dal backend
-        // Qui utilizziamo dati di esempio
+        setIsLoading(true);
         
-        // Statistiche mensili
-        const mockMonthlyStats: MonthlyStats[] = [
-          { month: 'Gen', users: 45, enrollments: 120, completions: 35, testAttempts: 80 },
-          { month: 'Feb', users: 52, enrollments: 145, completions: 42, testAttempts: 95 },
-          { month: 'Mar', users: 58, enrollments: 160, completions: 48, testAttempts: 110 },
-          { month: 'Apr', users: 65, enrollments: 180, completions: 55, testAttempts: 125 },
-          { month: 'Mag', users: 72, enrollments: 200, completions: 62, testAttempts: 140 },
-          { month: 'Giu', users: 80, enrollments: 220, completions: 70, testAttempts: 155 },
-        ];
-        
-        // Statistiche di completamento dei corsi
-        const mockCourseCompletionStats: CourseCompletionStats[] = [
-          { courseName: 'Introduzione al Marketing Digitale', enrollments: 156, completions: 98, completionRate: 62.8 },
-          { courseName: 'SEO Avanzato', enrollments: 89, completions: 45, completionRate: 50.6 },
-          { courseName: 'Social Media Strategy', enrollments: 124, completions: 82, completionRate: 66.1 },
-          { courseName: 'Email Marketing Efficace', enrollments: 78, completions: 56, completionRate: 71.8 },
-          { courseName: 'Content Marketing', enrollments: 112, completions: 67, completionRate: 59.8 },
-        ];
-        
-        setMonthlyStats(mockMonthlyStats);
-        setCourseCompletionStats(mockCourseCompletionStats);
+        // Fetch dashboard statistics
+        const statsResponse = await axios.get('/api/admin/stats');
+        setStats(statsResponse.data);
+
+        // Fetch monthly statistics
+        const monthlyResponse = await axios.get('/api/admin/stats/monthly');
+        setMonthlyStats(monthlyResponse.data);
+
+        // Fetch course completion statistics
+        const completionResponse = await axios.get('/api/admin/stats/completion');
+        setCourseCompletionStats(completionResponse.data);
+
         setIsLoading(false);
       } catch (error) {
         console.error('Errore nel caricamento delle statistiche:', error);
@@ -108,21 +98,6 @@ const StatsPage: React.FC = () => {
 
     if (isAuthenticated && user?.role === 'admin') {
       fetchStats();
-    }
-  }, [isAuthenticated, user]);
-
-  useEffect(() => {
-    const fetchAdminStats = async () => {
-      try {
-        const response = await axios.get('/api/admin/stats');
-        setStats(response.data);
-      } catch (error) {
-        console.error('Errore nel caricamento delle statistiche:', error);
-      }
-    };
-
-    if (isAuthenticated && user?.role === 'admin') {
-      fetchAdminStats();
     }
   }, [isAuthenticated, user]);
 
@@ -191,39 +166,30 @@ const StatsPage: React.FC = () => {
 
         {/* Recent Enrollments */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Iscrizioni Recenti</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Iscrizioni Recenti</h2>
           <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Utente
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Corso
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Data
-                  </th>
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utente</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Corso</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {stats.recentEnrollments.map((enrollment, index) => (
-                  <tr key={index}>
-                    <td className="px-6 py-4 whitespace-nowrap">{enrollment.userName}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{enrollment.courseName}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                {stats.recentEnrollments.map((enrollment) => (
+                  <tr key={`${enrollment.userId}-${enrollment.courseId}`}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {enrollment.userName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {enrollment.courseName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(enrollment.date).toLocaleDateString()}
                     </td>
                   </tr>
                 ))}
-                {stats.recentEnrollments.length === 0 && (
-                  <tr>
-                    <td colSpan={3} className="px-6 py-4 text-center text-gray-500">
-                      Nessuna iscrizione recente
-                    </td>
-                  </tr>
-                )}
               </tbody>
             </table>
           </div>
@@ -231,37 +197,30 @@ const StatsPage: React.FC = () => {
 
         {/* Popular Courses */}
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">Corsi Popolari</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Corsi Popolari</h2>
           <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Corso
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Iscrizioni
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ricavi
-                  </th>
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Corso</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Iscrizioni</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {stats.popularCourses.map((course, index) => (
-                  <tr key={index}>
-                    <td className="px-6 py-4 whitespace-nowrap">{course.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{course.enrollments}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">€{course.revenue.toFixed(2)}</td>
-                  </tr>
-                ))}
-                {stats.popularCourses.length === 0 && (
-                  <tr>
-                    <td colSpan={3} className="px-6 py-4 text-center text-gray-500">
-                      Nessun corso disponibile
+                {stats.popularCourses.map((course) => (
+                  <tr key={course.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {course.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {course.enrollments}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      €{course.revenue.toFixed(2)}
                     </td>
                   </tr>
-                )}
+                ))}
               </tbody>
             </table>
           </div>

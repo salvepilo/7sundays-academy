@@ -1,119 +1,72 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 interface User {
   _id: string;
+  name: string;
   email: string;
-  role: string;
+  role: 'admin' | 'instructor' | 'student';
+  avatar?: string;
+  bio?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-interface UseUsersResult {
-  users: User[];
-  isLoading: boolean;
-  error: string | null;
-  createUser: (user: Omit<User, '_id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  updateUser: (user: User) => Promise<void>;
-  deleteUser: (userId: string) => Promise<void>;
-}
-
-const useUsers = (): UseUsersResult => {
+export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchUsers = async () => {
-    setIsLoading(true);
-    setError(null);
     try {
-      const response = await fetch('/api/users');
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      setUsers(data);
+      const response = await axios.get('/api/users');
+      setUsers(response.data);
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('An unknown error occurred');
-      }
+      console.error('Error fetching users:', err);
+      setError('Errore nel caricamento degli utenti');
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const createUser = async (user: Omit<User, '_id' | 'createdAt' | 'updatedAt'>) => {
-    setIsLoading(true);
-    setError(null);
+  const createUser = async (userData: {
+    name: string;
+    email: string;
+    password: string;
+    role: 'admin' | 'instructor' | 'student';
+    avatar?: string;
+    bio?: string;
+  }) => {
     try {
-      const response = await fetch('/api/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(user),
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      fetchUsers();
+      const response = await axios.post('/api/users', userData);
+      setUsers((prev) => [...prev, response.data]);
+      return response.data;
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('An unknown error occurred');
-      }
-    } finally {
-      setIsLoading(false);
+      console.error('Error creating user:', err);
+      throw err;
     }
   };
 
-  const updateUser = async (user: User) => {
-    setIsLoading(true);
-    setError(null);
+  const updateUser = async (id: string, userData: Partial<User>) => {
     try {
-      const response = await fetch(`/api/users/${user._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(user),
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      fetchUsers();
+      const response = await axios.put(`/api/users/${id}`, userData);
+      setUsers((prev) =>
+        prev.map((user) => (user._id === id ? response.data : user))
+      );
+      return response.data;
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('An unknown error occurred');
-      }
-    } finally {
-      setIsLoading(false);
+      console.error('Error updating user:', err);
+      throw err;
     }
   };
 
-  const deleteUser = async (userId: string) => {
-    setIsLoading(true);
-    setError(null);
+  const deleteUser = async (id: string) => {
     try {
-      const response = await fetch(`/api/users/${userId}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      fetchUsers();
+      await axios.delete(`/api/users/${id}`);
+      setUsers((prev) => prev.filter((user) => user._id !== id));
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('An unknown error occurred');
-      }
-    } finally {
-      setIsLoading(false);
+      console.error('Error deleting user:', err);
+      throw err;
     }
   };
 
@@ -121,7 +74,13 @@ const useUsers = (): UseUsersResult => {
     fetchUsers();
   }, []);
 
-  return { users, isLoading, error, createUser, updateUser, deleteUser };
+  return {
+    users,
+    loading,
+    error,
+    createUser,
+    updateUser,
+    deleteUser,
+    refetch: fetchUsers,
+  };
 };
-
-export default useUsers;

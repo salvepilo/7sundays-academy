@@ -40,12 +40,33 @@ const getDashboardStats = asyncHandler(async (req, res) => {
       ? Math.round(completionRates.reduce((a, b) => a + b, 0) / completionRates.length)
       : 0;
 
-    // System status (mock data for now)
-    const systemStatus = {
-      database: true,
-      storage: true,
-      email: true
-    };
+    // Get recent enrollments
+    const recentEnrollments = await Enrollment.find()
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .populate('user', 'name')
+      .populate('course', 'title');
+
+    // Get popular courses
+    const popularCourses = await Course.aggregate([
+      {
+        $lookup: {
+          from: 'enrollments',
+          localField: '_id',
+          foreignField: 'course',
+          as: 'enrollments'
+        }
+      },
+      {
+        $project: {
+          name: 1,
+          enrollments: { $size: '$enrollments' },
+          revenue: { $multiply: ['$price', { $size: '$enrollments' }] }
+        }
+      },
+      { $sort: { enrollments: -1 } },
+      { $limit: 5 }
+    ]);
 
     res.json({
       totalUsers,
@@ -53,7 +74,14 @@ const getDashboardStats = asyncHandler(async (req, res) => {
       monthlyEnrollments,
       totalRevenue,
       averageCompletionRate,
-      systemStatus
+      recentEnrollments: recentEnrollments.map(enrollment => ({
+        userId: enrollment.user._id,
+        courseId: enrollment.course._id,
+        date: enrollment.createdAt,
+        userName: enrollment.user.name,
+        courseName: enrollment.course.title
+      })),
+      popularCourses
     });
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);
@@ -61,74 +89,85 @@ const getDashboardStats = asyncHandler(async (req, res) => {
   }
 });
 
-// @desc    Get recent activities
-// @route   GET /api/admin/activities
+// @desc    Get monthly statistics
+// @route   GET /api/admin/stats/monthly
 // @access  Private/Admin
-const getRecentActivities = asyncHandler(async (req, res) => {
+const getMonthlyStats = asyncHandler(async (req, res) => {
   try {
-    // Get recent enrollments
-    const recentEnrollments = await Enrollment.find()
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .populate('user', 'name email')
-      .populate('course', 'title');
+    const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+    const currentMonth = new Date().getMonth();
+    const stats = [];
 
-    // Get recent course creations
-    const recentCourses = await Course.find()
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .populate('instructor', 'name email');
+    for (let i = 0; i < 6; i++) {
+      const monthIndex = (currentMonth - i + 12) % 12;
+      const startDate = new Date();
+      startDate.setMonth(monthIndex);
+      startDate.setDate(1);
+      startDate.setHours(0, 0, 0, 0);
 
-    // Get recent payments
-    const recentPayments = await Payment.find()
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .populate('user', 'name email');
+      const endDate = new Date(startDate);
+      endDate.setMonth(monthIndex + 1);
+      endDate.setDate(0);
+      endDate.setHours(23, 59, 59, 999);
 
-    // Combine and format activities
-    const activities = [
-      ...recentEnrollments.map(enrollment => ({
-        id: enrollment._id,
-        type: 'enrollment',
-        title: 'Nuova iscrizione al corso',
-        description: `${enrollment.user.name} si è iscritto a ${enrollment.course.title}`,
-        timestamp: enrollment.createdAt,
-        user: {
-          name: enrollment.user.name,
-          email: enrollment.user.email
-        }
-      })),
-      ...recentCourses.map(course => ({
-        id: course._id,
-        type: 'course_creation',
-        title: 'Nuovo corso creato',
-        description: `${course.title} è stato creato da ${course.instructor.name}`,
-        timestamp: course.createdAt
-      })),
-      ...recentPayments.map(payment => ({
-        id: payment._id,
-        type: 'payment',
-        title: 'Nuovo pagamento ricevuto',
-        description: `Pagamento di €${payment.amount} ricevuto`,
-        timestamp: payment.createdAt,
-        user: {
-          name: payment.user.name,
-          email: payment.user.email
-        }
-      }))
-    ];
+      const [users, enrollments, completions, testAttempts] = await Promise.all([
+        User.countDocuments({ createdAt: { $gte: startDate, $lte: endDate } }),
+        Enrollment.countDocuments({ createdAt: { $gte: startDate, $lte: endDate } }),
+        Enrollment.countDocuments({ 
+          createdAt: { $gte: startDate, $lte: endDate },
+          completedLessons: { $exists: true, $ne: [] }
+        }),
+        Enrollment.countDocuments({ 
+          createdAt: { $gte: startDate, $lte: endDate },
+          testAttempts: { $exists: true, $ne: [] }
+        })
+      ]);
 
-    // Sort activities by timestamp
-    activities.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      stats.unshift({
+        month: months[monthIndex],
+        users,
+        enrollments,
+        completions,
+        testAttempts
+      });
+    }
 
-    res.json(activities.slice(0, 10)); // Return only the 10 most recent activities
+    res.json(stats);
   } catch (error) {
-    console.error('Error fetching recent activities:', error);
-    res.status(500).json({ message: 'Error fetching recent activities' });
+    console.error('Error fetching monthly stats:', error);
+    res.status(500).json({ message: 'Error fetching monthly statistics' });
+  }
+});
+
+// @desc    Get course completion statistics
+// @route   GET /api/admin/stats/completion
+// @access  Private/Admin
+const getCourseCompletionStats = asyncHandler(async (req, res) => {
+  try {
+    const courses = await Course.find().populate('enrollments');
+    
+    const completionStats = courses.map(course => {
+      const enrollments = course.enrollments.length;
+      const completions = course.enrollments.filter(e => e.completedLessons.length === course.lessons.length).length;
+      const completionRate = enrollments > 0 ? (completions / enrollments) * 100 : 0;
+
+      return {
+        courseName: course.title,
+        enrollments,
+        completions,
+        completionRate: Math.round(completionRate * 10) / 10
+      };
+    });
+
+    res.json(completionStats);
+  } catch (error) {
+    console.error('Error fetching course completion stats:', error);
+    res.status(500).json({ message: 'Error fetching course completion statistics' });
   }
 });
 
 export {
   getDashboardStats,
-  getRecentActivities
+  getMonthlyStats,
+  getCourseCompletionStats
 }; 

@@ -9,16 +9,18 @@ const __dirname = path.dirname(__filename);
 // Carica le variabili d'ambiente dal file .env
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
-// Verifica che JWT_SECRET sia caricato correttamente
-if (!process.env.JWT_SECRET) {
-  console.error('ERRORE: JWT_SECRET non è definito nel file .env');
-  process.exit(1);
+// Verifica le variabili d'ambiente richieste
+const requiredEnvVars = ['PORT', 'MONGODB_URI', 'JWT_SECRET'];
+for (const envVar of requiredEnvVars) {
+  if (!process.env[envVar]) {
+    console.error(`ERRORE: ${envVar} non è definito nel file .env`);
+    process.exit(1);
+  }
 }
 
 // Verifica che le chiavi di Stripe siano caricate correttamente
 if (!process.env.STRIPE_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
   console.warn('ATTENZIONE: Le chiavi di Stripe non sono configurate. Le funzionalità di pagamento non saranno disponibili.');
-  // Non facciamo crashare l'app, ma impostiamo le variabili a stringhe vuote
   process.env.STRIPE_KEY = '';
   process.env.STRIPE_WEBHOOK_SECRET = '';
 }
@@ -52,7 +54,7 @@ import './scripts/initAdmin.js';
 
 // Express app
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const isDev = NODE_ENV === 'development';
 
@@ -63,25 +65,33 @@ const isDev = NODE_ENV === 'development';
 // Security
 app.use(
   helmet({
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'"],
+      },
+    },
     crossOriginEmbedderPolicy: false,
   })
 );
 
-//CORS middleware
+// CORS middleware
 const allowedOrigins = [
   'http://localhost:3000',
-  'http://127.0.0.1:3000'
-];
+  'http://127.0.0.1:3000',
+  process.env.FRONTEND_URL,
+].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       console.warn(`CORS blocked from origin: ${origin}`);
-      callback(null, true);
+      callback(new Error('Not allowed by CORS'));
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -90,9 +100,8 @@ app.use(cors({
   maxAge: 86400
 }));
 
-// Middleware
+// Body parsing
 app.use(express.json({ limit: '10mb' }));
-
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Logging
@@ -130,7 +139,6 @@ const apiLimiter = rateLimit({
 // Database Connection
 // =========================================================
 
-const MONGODB_URI = 'mongodb+srv://andreafarneti98:Rkthub100!*@cluster0.gicdmgw.mongodb.net/7sundaysacademy?retryWrites=true&w=majority';
 const MONGODB_OPTIONS = {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -140,8 +148,8 @@ const MONGODB_OPTIONS = {
 const connectWithRetry = async (retryCount = 0, maxRetries = 5) => {
   try {
     console.log(`Connecting to MongoDB (attempt ${retryCount + 1}/${maxRetries})...`);
-   await mongoose.connect(MONGODB_URI, MONGODB_OPTIONS);
-    console.log('MongoDB connection established successfully'); 
+    await mongoose.connect(process.env.MONGODB_URI, MONGODB_OPTIONS);
+    console.log('MongoDB connection established successfully');
   } catch (err) {
     console.error(`Database connection error: ${err.message}`);
     if (retryCount < maxRetries) {
@@ -164,25 +172,24 @@ mongoose.connection.on('error', (err) => {
   console.error('MongoDB connection error:', err);
 });
 
-connectWithRetry();
-
 // =========================================================
 // Routes
 // =========================================================
+
 // Configura il middleware raw per i webhook Stripe prima delle altre rotte
 app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
 
 // Rotte API con rate limiting
+app.use('/api/auth', apiLimiter, authRoutes);
 app.use('/api/users', apiLimiter, userRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/courses', courseRoutes);
-app.use('/api/lessons', lessonRoutes);
-app.use('/api/tests', testRoutes);
-app.use('/api/networking', networkingRoutes);
-app.use('/api', emailConfigRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/courses', apiLimiter, courseRoutes);
+app.use('/api/lessons', apiLimiter, lessonRoutes);
+app.use('/api/tests', apiLimiter, testRoutes);
+app.use('/api/networking', apiLimiter, networkingRoutes);
+app.use('/api/email-config', apiLimiter, emailConfigRoutes);
+app.use('/api/payments', apiLimiter, paymentRoutes);
+app.use('/api/admin', apiLimiter, adminRoutes);
+
 // =========================================================
 // Public Routes
 // =========================================================
@@ -228,54 +235,32 @@ app.get('/health', (req, res) => {
 // Error Handling
 // =========================================================
 
-// 404 error handler
-app.use((req, res, next) => {
-  console.log(`404: ${req.method} ${req.originalUrl} not found`);
+// 404 handler
+app.use((req, res) => {
   res.status(404).json({
-    status: 'fail',
-    message: 'Resource not found',
-    path: req.originalUrl
+    status: 'error',
+    message: 'Route not found'
   });
 });
 
-// General error handler
+// Global error handler
 app.use((err, req, res, next) => {
   console.error('Error:', err);
-  const statusCode = err.statusCode || (err.name === 'ValidationError' ? 400 : 500);
-  const errorMessage = err.message || 'Internal server error';
-
-  const errorResponse = {
-    status: statusCode >= 500 ? 'error' : 'fail',
-    message: errorMessage
-  };
-
-  if (isDev) {
-    errorResponse.stack = err.stack;
-    if (err.name === 'ValidationError') {
-      errorResponse.details = err.errors;
-    }
-  }
-
-  res.status(statusCode).json(errorResponse);
-});
-
-// JSON syntax error handler
-app.use((err, req, res, next) => {
-  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-    return res.status(400).json({
-      status: 'fail',
-      message: 'Invalid JSON in request'
-    });
-  }
-  next(err);
+  res.status(err.status || 500).json({
+    status: 'error',
+    message: isDev ? err.message : 'Internal server error'
+  });
 });
 
 // =========================================================
-// Server Startup
+// Server Start
 // =========================================================
 
-const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Avvia la connessione al database
+connectWithRetry();
+
+// Avvia il server
+app.listen(PORT, () => {
   console.log('Server started');
   console.log(`Environment: ${NODE_ENV}`);
   console.log(`URL: http://localhost:${PORT}`);
@@ -284,7 +269,7 @@ const server = app.listen(PORT, () => {
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM signal received. Shutting down...');
-  server.close(() => {
+  app.close(() => {
     mongoose.connection.close(false, () => {
       console.log('MongoDB connection closed.');
       process.exit(0);
@@ -292,10 +277,9 @@ process.on('SIGTERM', () => {
   });
 });
 
-
 process.on('SIGINT', () => {
   console.log('SIGINT signal received. Shutting down...');
-  server.close(() => {
+  app.close(() => {
     mongoose.connection.close(false, () => {
       console.log('MongoDB connection closed.');
       process.exit(0);

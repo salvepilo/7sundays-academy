@@ -4,17 +4,16 @@ const paymentSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: [true, 'L\'utente è obbligatorio']
   },
   course: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Course',
-    required: true
+    required: [true, 'Il corso è obbligatorio']
   },
   amount: {
     type: Number,
-    required: true,
-    min: 0
+    required: [true, 'L\'importo è obbligatorio']
   },
   currency: {
     type: String,
@@ -27,9 +26,9 @@ const paymentSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    required: true
+    required: [true, 'Il metodo di pagamento è obbligatorio']
   },
-  stripePaymentId: {
+  transactionId: {
     type: String
   },
   receiptUrl: {
@@ -42,6 +41,7 @@ const paymentSchema = new mongoose.Schema({
   timestamps: true
 });
 
-const Payment = mongoose.model('Payment', paymentSchema);
+// Check if the model already exists
+const Payment = mongoose.models.Payment || mongoose.model('Payment', paymentSchema);
 
 export default Payment; 

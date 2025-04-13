@@ -17,7 +17,7 @@ const courseSchema = new mongoose.Schema({
   instructor: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: [true, 'L\'istruttore è obbligatorio']
   },
   price: {
     type: Number,
@@ -30,19 +30,20 @@ const courseSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    required: [true, 'La categoria è obbligatoria']
+    required: [true, 'La categoria è obbligatoria'],
+    enum: ['programmazione', 'design', 'marketing', 'business', 'lingue', 'altro']
   },
   subcategories: [{
     type: String
   }],
   level: {
     type: String,
-    enum: ['beginner', 'intermediate', 'advanced'],
-    required: [true, 'Il livello è obbligatorio']
+    required: [true, 'Il livello è obbligatorio'],
+    enum: ['principiante', 'intermedio', 'avanzato']
   },
   status: {
     type: String,
-    enum: ['draft', 'published', 'archived'],
+    enum: ['draft', 'published'],
     default: 'draft'
   },
   requirements: [{
@@ -149,6 +150,7 @@ courseSchema.virtual('lessons', {
   foreignField: 'course'
 });
 
-const Course = mongoose.model('Course', courseSchema);
+// Check if the model already exists
+const Course = mongoose.models.Course || mongoose.model('Course', courseSchema);
 
 export default Course; 

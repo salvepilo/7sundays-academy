@@ -13,8 +13,8 @@ import {
   deleteCourse, publishCourse, getCourseStats
 } from '../controllers/courseController.js';
 import { protect, restrictTo } from '../controllers/authController.js';
+import upload from '../utils/cloudinary.js';
 
-  
 const router = express.Router();
 
 // Route pubbliche
@@ -33,8 +33,8 @@ router.get('/:id/certificate', generateCertificate);
 // Route solo per admin
 router.use(restrictTo('admin'));
 
-router.post('/', createCourse);
-router.patch('/:id', updateCourse);
+router.post('/', upload.single('thumbnail'), createCourse);
+router.patch('/:id', upload.single('thumbnail'), updateCourse);
 router.post('/:courseId/lessons/:lessonId', addLessonToCourse);
 router.delete('/:courseId/lessons/:lessonId', removeLessonFromCourse);
 

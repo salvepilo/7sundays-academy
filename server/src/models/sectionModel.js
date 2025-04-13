@@ -7,16 +7,21 @@ const sectionSchema = new mongoose.Schema({
     trim: true
   },
   description: {
-    type: String
+    type: String,
+    default: ''
   },
   course: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Course',
-    required: true
+    required: [true, 'Il corso è obbligatorio']
   },
   order: {
     type: Number,
-    required: true
+    required: [true, 'L\'ordine è obbligatorio']
+  },
+  isPublished: {
+    type: Boolean,
+    default: false
   },
   isPreview: {
     type: Boolean,
@@ -54,6 +59,7 @@ const sectionSchema = new mongoose.Schema({
 sectionSchema.index({ course: 1, order: 1 });
 sectionSchema.index({ status: 1 });
 
-const Section = mongoose.model('Section', sectionSchema);
+// Check if the model already exists
+const Section = mongoose.models.Section || mongoose.model('Section', sectionSchema);
 
 export default Section; 

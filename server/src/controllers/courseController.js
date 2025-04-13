@@ -468,6 +468,134 @@ const getEnrolledCourses = asyncHandler(async (req, res) => {
   }
 });
 
+const updateProgress = asyncHandler(async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { lessonId, completed } = req.body;
+
+    // Find enrollment
+    const enrollment = await Enrollment.findOne({
+      course: courseId,
+      student: req.user._id
+    });
+
+    if (!enrollment) {
+      res.status(404);
+      throw new Error('Enrollment not found');
+    }
+
+    // Update lesson progress
+    const lessonProgress = enrollment.lessonProgress || {};
+    lessonProgress[lessonId] = completed;
+
+    // Calculate overall progress
+    const totalLessons = await Lesson.countDocuments({ course: courseId });
+    const completedLessons = Object.values(lessonProgress).filter(Boolean).length;
+    const progress = (completedLessons / totalLessons) * 100;
+
+    // Update enrollment
+    enrollment.lessonProgress = lessonProgress;
+    enrollment.progress = progress;
+
+    // Check if course is completed
+    if (progress === 100 && enrollment.status !== 'completed') {
+      enrollment.status = 'completed';
+      enrollment.completedAt = new Date();
+    }
+
+    await enrollment.save();
+
+    res.json({
+      progress,
+      status: enrollment.status,
+      completedAt: enrollment.completedAt
+    });
+  } catch (error) {
+    console.error('Error updating progress:', error);
+    res.status(500).json({ message: 'Error updating progress' });
+  }
+});
+
+const removeLessonFromCourse = asyncHandler(async (req, res) => {
+  try {
+    const { courseId, lessonId } = req.params;
+
+    // Verify course exists
+    const course = await Course.findById(courseId);
+    if (!course) {
+      res.status(404);
+      throw new Error('Course not found');
+    }
+
+    // Find and delete lesson
+    const lesson = await Lesson.findOneAndDelete({
+      _id: lessonId,
+      course: courseId
+    });
+
+    if (!lesson) {
+      res.status(404);
+      throw new Error('Lesson not found');
+    }
+
+    // Remove lesson from section
+    await Section.updateOne(
+      { lessons: lessonId },
+      { $pull: { lessons: lessonId } }
+    );
+
+    // Update course's total lessons count
+    await Course.findByIdAndUpdate(courseId, {
+      $inc: { totalLessons: -1 }
+    });
+
+    res.json({ message: 'Lesson removed successfully' });
+  } catch (error) {
+    console.error('Error removing lesson:', error);
+    res.status(500).json({ message: 'Error removing lesson' });
+  }
+});
+
+const publishCourse = asyncHandler(async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id);
+
+    if (!course) {
+      res.status(404);
+      throw new Error('Course not found');
+    }
+
+    // Check if course is ready to be published
+    if (!course.sections?.length) {
+      res.status(400);
+      throw new Error('Course must have at least one section to be published');
+    }
+
+    const hasLessons = await Section.exists({
+      course: course._id,
+      lessons: { $exists: true, $ne: [] }
+    });
+
+    if (!hasLessons) {
+      res.status(400);
+      throw new Error('Course must have at least one lesson to be published');
+    }
+
+    // Update course status
+    course.status = 'published';
+    course.publishedAt = new Date();
+    await course.save();
+
+    res.json({
+      message: 'Course published successfully',
+      course
+    });
+  } catch (error) {
+    console.error('Error publishing course:', error);
+    res.status(500).json({ message: 'Error publishing course' });
+  }
+});
+
 export {
   getAllCourses,
   getCourse,
@@ -479,5 +607,8 @@ export {
   addLessonToCourse,
   enrollInCourse,
   generateCertificate,
-  getEnrolledCourses
+  getEnrolledCourses,
+  updateProgress,
+  removeLessonFromCourse,
+  publishCourse
 };
