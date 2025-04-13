@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { FiSave, FiX } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
+import { createCourse } from '@/lib/api/courses';
 
 interface CourseFormData {
   title: string;
@@ -34,18 +35,22 @@ export default function CreateCourse() {
     setIsLoading(true);
 
     try {
-      // TODO: Implementare la chiamata API reale
-      const response = await fetch('/api/admin/courses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+      const formDataToSend = new FormData();
+      
+      // Aggiungi tutti i campi del form
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === 'requirements' || key === 'objectives') {
+          formDataToSend.append(key, JSON.stringify(value));
+        } else {
+          formDataToSend.append(key, value.toString());
+        }
       });
 
-      if (!response.ok) throw new Error('Errore nella creazione del corso');
-
+      await createCourse(formDataToSend);
       toast.success('Corso creato con successo');
       router.push('/admin/courses');
     } catch (error) {
+      console.error('Errore durante la creazione del corso:', error);
       toast.error('Errore durante la creazione del corso');
     } finally {
       setIsLoading(false);
@@ -58,6 +63,10 @@ export default function CreateCourse() {
   };
 
   const handleListChange = (type: 'requirements' | 'objectives', value: string) => {
+    if (!value) {
+      setFormData(prev => ({ ...prev, [type]: [] }));
+      return;
+    }
     const items = value.split('\n').filter(item => item.trim() !== '');
     setFormData(prev => ({ ...prev, [type]: items }));
   };
